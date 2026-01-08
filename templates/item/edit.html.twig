@@ -1,0 +1,266 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'edit_item.title'|trans({'%id%': item.customId}) }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Навигационные breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_home') }}">{{ 'edit_item.breadcrumb_home'|trans }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('inventory_show', {'id': inventory.id}) }}">{{ inventory.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ 'edit_item.breadcrumb_edit'|trans({'%id%': item.customId}) }}</li>
+        </ol>
+    </nav>
+
+    <!-- Сообщения об успехе -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <!-- Общие ошибки валидации -->
+    {% if errors is defined and errors is not empty %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>{{ 'validation_errors.title'|trans }}</strong>
+            <ul class="mb-0 mt-2">
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ 'edit_item.heading'|trans({'%id%': item.customId}) }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('item_edit', {'inventoryId': inventory.id, 'id': item.id}) }}" id="itemForm">
+                        <input type="hidden" name="_token" value="{{ csrf_token('edit_item') }}">
+                        <input type="hidden" name="version" value="{{ item.version }}" id="itemVersion">
+
+                        <!-- Фиксированные поля (только для чтения) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Custom ID</label>
+                                <input type="text" class="form-control" value="{{ item.customId }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ 'edit_item.created_by_label'|trans }}</label>
+                                <input type="text" class="form-control" value="{{ item.createdBy.username ?: item.createdBy.email }}" readonly>
+                                <div class="form-text">{{ item.createdAt|date('d.m.Y H:i') }}</div>
+                            </div>
+                        </div>
+
+                        {% if item.updatedAt %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ 'edit_item.last_updated_label'|trans }}</label>
+                                <input type="text" class="form-control" value="{{ item.updatedAt|date('d.m.Y H:i') }}" readonly>
+                            </div>
+                        {% endif %}
+
+                        <!-- Кастомные поля -->
+                        {% for i in 1..3 %}
+                            {# String поля #}
+                            {% if attribute(inventory, 'customString' ~ i ~ 'State') %}
+                                <div class="mb-3">
+                                    <label for="custom_string{{ i }}_value" class="form-label">
+                                        {{ attribute(inventory, 'customString' ~ i ~ 'Name') }}
+                                        {% if attribute(inventory, 'customString' ~ i ~ 'Description') %}
+                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="{{ attribute(inventory, 'customString' ~ i ~ 'Description') }}"></i>
+                                        {% endif %}
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="custom_string{{ i }}_value"
+                                           name="custom_string{{ i }}_value"
+                                           maxlength="255"
+                                           value="{{ formData['custom_string' ~ i ~ '_value'] ?? attribute(item, 'customString' ~ i ~ 'Value') }}"
+                                           placeholder="{{ attribute(inventory, 'customString' ~ i ~ 'Description') }}">
+                                </div>
+                            {% endif %}
+
+                            {# Text поля #}
+                            {% if attribute(inventory, 'customText' ~ i ~ 'State') %}
+                                <div class="mb-3">
+                                    <label for="custom_text{{ i }}_value" class="form-label">
+                                        {{ attribute(inventory, 'customText' ~ i ~ 'Name') }}
+                                        {% if attribute(inventory, 'customText' ~ i ~ 'Description') %}
+                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="{{ attribute(inventory, 'customText' ~ i ~ 'Description') }}"></i>
+                                        {% endif %}
+                                    </label>
+                                    <textarea class="form-control"
+                                              id="custom_text{{ i }}_value"
+                                              name="custom_text{{ i }}_value"
+                                              rows="3"
+                                              placeholder="{{ attribute(inventory, 'customText' ~ i ~ 'Description') }}">{{ formData['custom_text' ~ i ~ '_value'] ?? attribute(item, 'customText' ~ i ~ 'Value') }}</textarea>
+                                </div>
+                            {% endif %}
+
+                            {# Integer поля #}
+                            {% if attribute(inventory, 'customInt' ~ i ~ 'State') %}
+                                <div class="mb-3">
+                                    <label for="custom_int{{ i }}_value" class="form-label">
+                                        {{ attribute(inventory, 'customInt' ~ i ~ 'Name') }}
+                                        {% if attribute(inventory, 'customInt' ~ i ~ 'Description') %}
+                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="{{ attribute(inventory, 'customInt' ~ i ~ 'Description') }}"></i>
+                                        {% endif %}
+                                    </label>
+                                    <input type="number"
+                                           class="form-control"
+                                           id="custom_int{{ i }}_value"
+                                           name="custom_int{{ i }}_value"
+                                           value="{{ formData['custom_int' ~ i ~ '_value'] ?? attribute(item, 'customInt' ~ i ~ 'Value') }}"
+                                           placeholder="{{ attribute(inventory, 'customInt' ~ i ~ 'Description') }}">
+                                </div>
+                            {% endif %}
+
+                            {# Boolean поля #}
+                            {% if attribute(inventory, 'customBool' ~ i ~ 'State') %}
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               id="custom_bool{{ i }}_value"
+                                               name="custom_bool{{ i }}_value"
+                                               value="on"
+                                               {{ (formData['custom_bool' ~ i ~ '_value'] ?? attribute(item, 'customBool' ~ i ~ 'Value')) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="custom_bool{{ i }}_value">
+                                            {{ attribute(inventory, 'customBool' ~ i ~ 'Name') }}
+                                            {% if attribute(inventory, 'customBool' ~ i ~ 'Description') %}
+                                                <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ attribute(inventory, 'customBool' ~ i ~ 'Description') }}"></i>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {# Link поля #}
+                            {% if attribute(inventory, 'customLink' ~ i ~ 'State') %}
+                                <div class="mb-3" data-controller="link-preview">
+                                    <label for="custom_link{{ i }}_value" class="form-label">
+                                        {{ attribute(inventory, 'customLink' ~ i ~ 'Name') }}
+                                        {% if attribute(inventory, 'customLink' ~ i ~ 'Description') %}
+                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="{{ attribute(inventory, 'customLink' ~ i ~ 'Description') }}"></i>
+                                        {% endif %}
+                                    </label>
+                                    <input type="url"
+                                           class="form-control"
+                                           id="custom_link{{ i }}_value"
+                                           name="custom_link{{ i }}_value"
+                                           value="{{ formData['custom_link' ~ i ~ '_value'] ?? attribute(item, 'customLink' ~ i ~ 'Value') }}"
+                                           placeholder="{{ attribute(inventory, 'customLink' ~ i ~ 'Description') }}"
+                                           data-link-preview-target="input"
+                                           data-action="input->link-preview#onInput">
+                                    <div data-link-preview-target="preview" class="link-preview-container mt-2">
+                                        {% if attribute(item, 'customLink' ~ i ~ 'Value') %}
+                                            {{ preview_service.generateLinkPreview(attribute(item, 'customLink' ~ i ~ 'Value'))|raw }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Кнопки действий -->
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary" id="saveBtn">
+                                <i class="bi bi-check-lg"></i> {{ 'edit_item.save_button'|trans }}
+                            </button>
+                            <a href="{{ path('inventory_show', {'id': inventory.id}) }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> {{ 'edit_item.cancel_button'|trans }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Боковая панель с информацией -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">{{ 'edit_item.info_title'|trans }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>{{ 'edit_item.info_id'|trans }}</strong><br>
+                        {{ item.customId }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>{{ 'edit_item.info_created'|trans }}</strong><br>
+                        {{ item.createdAt|date('d.m.Y H:i') }}<br>
+                        <small class="text-muted">{{ item.createdBy.username ?: item.createdBy.email }}</small>
+                    </div>
+                    {% if item.updatedAt %}
+                        <div class="mb-3">
+                            <strong>{{ 'edit_item.info_updated'|trans }}</strong><br>
+                            {{ item.updatedAt|date('d.m.Y H:i') }}
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <strong>{{ 'edit_item.info_likes'|trans }}</strong><br>
+                        {{ item.likes|length }}
+                    </div>
+                    <div class="mb-0">
+                        <strong>{{ 'edit_item.info_inventory'|trans }}</strong><br>
+                        <a href="{{ path('inventory_show', {'id': inventory.id}) }}">{{ inventory.title }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Переменная для отслеживания изменений
+let hasUnsavedChanges = false;
+let currentVersion = {{ item.version }};
+
+// Отслеживание изменений в форме
+function trackChanges() {
+    const form = document.getElementById('itemForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            hasUnsavedChanges = true;
+        });
+
+        input.addEventListener('change', function() {
+            hasUnsavedChanges = true;
+        });
+    });
+
+    // Сброс флага изменений перед отправкой формы
+    form.addEventListener('submit', function() {
+        hasUnsavedChanges = false;
+    });
+}
+
+// Предупреждение при уходе со страницы с несохраненными изменениями
+window.addEventListener('beforeunload', function(e) {
+    if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '{{ 'edit_item.unsaved_changes_warning'|trans }}';
+        return e.returnValue;
+    }
+});
+
+// Инициализация tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Инициализация отслеживания изменений
+    trackChanges();
+});
+</script>
+{% endblock %}

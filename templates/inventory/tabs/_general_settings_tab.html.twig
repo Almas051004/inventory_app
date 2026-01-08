@@ -1,0 +1,125 @@
+                <!-- Вкладка Общие настройки -->
+                <div class="tab-pane fade" id="general-settings" role="tabpanel" aria-labelledby="general-settings-tab">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">{{ 'settings.title'|trans }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="{{ path('inventory_general_settings', {'id': inventory.id}) }}" enctype="multipart/form-data">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('save_general_settings') }}">
+
+                                        <div class="mb-3">
+                                            <label for="title" class="form-label">
+                                                {{ 'settings.title_label'|trans }} {{ 'settings.required'|trans }}
+                                            </label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="title"
+                                                   name="title"
+                                                   required
+                                                   maxlength="255"
+                                                   value="{{ inventory.title }}">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">
+                                                {{ 'settings.description_label'|trans }}
+                                                <small class="text-muted">{{ 'settings.description_hint'|trans }}</small>
+                                            </label>
+                                            <textarea class="form-control"
+                                                      id="description"
+                                                      name="description"
+                                                      rows="4"
+                                                      placeholder="{{ 'settings.description_placeholder'|trans }}">{{ inventory.description }}</textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="category_id" class="form-label">
+                                                {{ 'settings.category_label'|trans }} {{ 'settings.required'|trans }}
+                                            </label>
+                                            <select class="form-select" id="category_id" name="category_id" required>
+                                                <option value="">{{ 'settings.category_placeholder'|trans }}</option>
+                                                {% for category in categories %}
+                                                    <option value="{{ category.id }}" {{ inventory.category.id == category.id ? 'selected' : '' }}>
+                                                        {{ category.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="tags" class="form-label">
+                                                {{ 'settings.tags_label'|trans }}
+                                                <small class="text-muted">{{ 'settings.tags_hint'|trans }}</small>
+                                            </label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="tags"
+                                                   name="tags"
+                                                   value="{{ inventory.tags|map(tag => tag.name)|join(', ') }}"
+                                                   placeholder="{{ 'settings.tags_placeholder'|trans }}">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="image" class="form-label">
+                                                {{ 'settings.image_label'|trans }}
+                                                <small class="text-muted">{{ 'settings.image_hint'|trans }}</small>
+                                            </label>
+                                            <input type="file"
+                                                   class="form-control"
+                                                   id="image"
+                                                   name="image"
+                                                   accept="image/*">
+                                            {% if inventory.imageUrl %}
+                                            <div class="mt-2">
+                                                <small class="text-muted">{{ 'settings.current_image'|trans }}</small><br>
+                                                <img src="{{ inventory.imageUrl }}" alt="{{ 'settings.current_image_alt'|trans }}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       id="is_public"
+                                                       name="is_public"
+                                                       {{ inventory.isPublic ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="is_public">
+                                                    {{ 'settings.public_access'|trans }}
+                                                </label>
+                                            </div>
+                                            <div class="form-text">
+                                                {{ 'settings.public_access_description'|trans }}
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-save"></i> {{ 'settings.save'|trans }}
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- Auto-save индикатор -->
+                                    <div id="general-settings-autosave" class="mt-3 d-none">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                <span class="visually-hidden">{{ 'fields.saving'|trans }}</span>
+                                            </div>
+                                            <small class="text-muted">{{ 'settings.saving'|trans }}</small>
+                                        </div>
+                                    </div>
+
+                                    <div id="general-settings-saved" class="mt-3 d-none">
+                                        <small class="text-success">
+                                            <i class="bi bi-check"></i> {{ 'settings.saved'|trans }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

@@ -1,0 +1,280 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'search.title'|trans({'%query%': query}) }}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">{{ 'search.heading'|trans }}</h1>
+
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" action="{{ path('app_search') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="searchQuery" class="form-label">{{ 'search.query_label'|trans }}</label>
+                        <input type="text" class="form-control" id="searchQuery" name="q"
+                               value="{{ query }}" placeholder="{{ 'search.query_placeholder'|trans }}"
+                               autocomplete="off">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchType" class="form-label">{{ 'search.type_label'|trans }}</label>
+                        <select class="form-select" id="searchType" name="type">
+                            <option value="all" {{ type == 'all' ? 'selected' : '' }}>{{ 'search.type_all'|trans }}</option>
+                            <option value="inventories" {{ type == 'inventories' ? 'selected' : '' }}>{{ 'search.type_inventories'|trans }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sortBy" class="form-label">{{ 'search.sort_label'|trans }}</label>
+                        <select class="form-select" id="sortBy" name="sort">
+                            <option value="created_at" {{ sortBy == 'created_at' ? 'selected' : '' }}>{{ 'search.sort_created_at'|trans }}</option>
+                            <option value="title" {{ sortBy == 'title' ? 'selected' : '' }}>{{ 'search.sort_title'|trans }}</option>
+                            <option value="popularity" {{ sortBy == 'popularity' ? 'selected' : '' }}>{{ 'search.sort_popularity'|trans }}</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="categoryFilter" class="form-label">{{ 'search.category_label'|trans }}</label>
+                                <select class="form-select" id="categoryFilter" name="category">
+                                    <option value="">{{ 'search.category_all'|trans }}</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {{ currentCategory == category.id ? 'selected' : '' }}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ 'search.tags_label'|trans }}</label>
+                                <div id="tagSelector" class="border rounded p-2" style="min-height: 38px;">
+                                    {% for tag in currentTagObjects %}
+                                    <span class="badge bg-primary me-1 mb-1" data-tag-id="{{ tag.id }}">
+                                        {{ tag.name }}
+                                        <button type="button" class="btn-close btn-close-white ms-1" aria-label="Remove" onclick="removeTag({{ tag.id }})"></button>
+                                    </span>
+                                    {% endfor %}
+                                    <input type="text" id="tagInput" class="border-0 p-0" style="outline: none; width: 100px;" placeholder="{{ 'search.tag_placeholder'|trans }}">
+                                    <!-- Hidden inputs container for selected tags -->
+                                    <div class="hidden-inputs-container" style="display: none;">
+                                        {% for tagId in currentTags %}
+                                        <input type="hidden" name="tags[]" value="{{ tagId }}">
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div id="tagSuggestions" class="position-absolute bg-white border rounded shadow-sm d-none" style="z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-search"></i> {{ 'search.search_button'|trans }}
+                                </button>
+                                <a href="{{ path('app_search') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> {{ 'search.reset_button'|trans }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        {% if query %}
+        <div class="mb-3">
+            <h4>{{ 'search.results_title'|trans({'%query%': query}) }}</h4>
+            <p class="text-muted">{{ 'search.results_count'|trans({'%count%': totalResults}) }}</p>
+        </div>
+        {% endif %}
+
+        {% if results.inventories is defined and results.inventories %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{'table.inventories'|trans}}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ 'table.name'|trans }}</th>
+                                <th>{{ 'table.description'|trans }}</th>
+                                <th>{{ 'table.category'|trans }}</th>
+                                <th>{{ 'table.creator'|trans }}</th>
+                                <th>{{ 'table.item'|trans }}</th>
+                                <th>{{ 'table.actions'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in results.inventories %}
+                            <tr>
+                                <td>
+                                        <a href="{{ path('inventory_show', {'id': inventory[0].id}) }}" class="text-decoration-none">
+                                        {{ inventory[0].title }}
+                                    </a>
+                                </td>
+                                <td>{{ inventory[0].description|slice(0, 100) ~ (inventory[0].description|length > 100 ? '...' : '') }}</td>
+                                <td>{{ inventory['category_name'] }}</td>
+                                <td>{{ inventory['username'] ?? inventory['email'] }}</td>
+                                <td>{{ inventory['item_count'] ?? 0 }}</td>
+                                <td>
+                                    <a href="{{ path('inventory_show', {'id': inventory[0].id}) }}" class="btn btn-sm btn-outline-primary">
+                                        {{ 'profile.view'|trans }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% elseif query %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> {{ 'search.no_results'|trans }}
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if totalResults > limit %}
+        <nav aria-label="Search results pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% set totalPages = (totalResults / limit)|round(0, 'ceil') %}
+                {% set startPage = max(1, page - 2) %}
+                {% set endPage = min(totalPages, page + 2) %}
+
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ path('app_search', app.request.query.all|merge({'page': page - 1})) }}">{{ 'search.pagination.previous'|trans }}</a>
+                </li>
+                {% endif %}
+
+                {% for pageNum in startPage..endPage %}
+                <li class="page-item {{ pageNum == page ? 'active' : '' }}">
+                    <a class="page-link" href="{{ path('app_search', app.request.query.all|merge({'page': pageNum})) }}">{{ pageNum }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page < totalPages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ path('app_search', app.request.query.all|merge({'page': page + 1})) }}">{{ 'search.pagination.next'|trans }}</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+// Tag selector functionality
+let selectedTags = {{ currentTags|json_encode|raw }};
+let currentTagObjects = {{ currentTagObjects|json_encode|raw }};
+
+// Initialize selectedTags from currentTagObjects if not already set
+if (selectedTags.length === 0 && currentTagObjects.length > 0) {
+    selectedTags = currentTagObjects.map(tag => tag.id);
+}
+let tagInput = document.getElementById('tagInput');
+let tagSuggestions = document.getElementById('tagSuggestions');
+let tagSelector = document.getElementById('tagSelector');
+
+function updateTagInputs() {
+    // Find the container for hidden inputs
+    let hiddenInputsContainer = tagSelector.querySelector('.hidden-inputs-container');
+    if (!hiddenInputsContainer) {
+        console.error('Hidden inputs container not found!');
+        return;
+    }
+
+    // Clear existing hidden inputs in container
+    hiddenInputsContainer.innerHTML = '';
+
+    // Add new hidden inputs
+    selectedTags.forEach(tagId => {
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'tags[]';
+        input.value = tagId;
+        hiddenInputsContainer.appendChild(input);
+    });
+}
+
+function addTag(tagId, tagName) {
+    if (!selectedTags.includes(tagId)) {
+        selectedTags.push(tagId);
+
+        let tagElement = document.createElement('span');
+        tagElement.className = 'badge bg-primary me-1 mb-1';
+        tagElement.setAttribute('data-tag-id', tagId);
+        tagElement.innerHTML = tagName + ' <button type="button" class="btn-close btn-close-white ms-1" aria-label="Remove" onclick="removeTag(' + tagId + ')"></button>';
+
+        tagSelector.insertBefore(tagElement, tagInput);
+        updateTagInputs();
+    }
+
+    tagInput.value = '';
+    tagSuggestions.classList.add('d-none');
+}
+
+function removeTag(tagId) {
+    selectedTags = selectedTags.filter(id => id != tagId);
+    document.querySelector(`[data-tag-id="${tagId}"]`).remove();
+    updateTagInputs();
+}
+
+// Tag input handling
+let tagTimeout;
+tagInput.addEventListener('input', function() {
+    clearTimeout(tagTimeout);
+    let query = this.value.trim();
+
+    if (query.length < 2) {
+        tagSuggestions.classList.add('d-none');
+        return;
+    }
+
+    tagTimeout = setTimeout(() => {
+        fetch(`/api/tags/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                tagSuggestions.innerHTML = '';
+
+                if (data.length > 0) {
+                    data.forEach(tag => {
+                        if (!selectedTags.includes(tag.id)) {
+                            let item = document.createElement('div');
+                            item.className = 'p-2 cursor-pointer';
+                            item.style.cursor = 'pointer';
+                            item.textContent = tag.name;
+                            item.onclick = () => addTag(tag.id, tag.name);
+                            item.onmouseover = () => item.style.backgroundColor = '#f8f9fa';
+                            item.onmouseout = () => item.style.backgroundColor = '';
+                            tagSuggestions.appendChild(item);
+                        }
+                    });
+                    tagSuggestions.classList.remove('d-none');
+                } else {
+                    tagSuggestions.classList.add('d-none');
+                }
+            });
+    }, 300);
+});
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(e) {
+    if (!tagSelector.contains(e.target)) {
+        tagSuggestions.classList.add('d-none');
+    }
+});
+
+// Prevent form submission on Enter in tag input
+tagInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

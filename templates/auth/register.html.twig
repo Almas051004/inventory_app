@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'auth.register.title'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Сообщения об успехе -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <!-- Сообщения об ошибках -->
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">{{ 'auth.register.title'|trans }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('auth_register') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('register') }}">
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">{{ 'auth.register.email'|trans }}</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">{{ 'auth.register.username'|trans }}</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">{{ 'auth.register.password'|trans }}</label>
+                            <input type="password" class="form-control" id="password" name="password" required minlength="8">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password_confirm" class="form-label">{{ 'auth.register.password_confirm'|trans }}</label>
+                            <input type="password" class="form-control" id="password_confirm" name="password_confirm" required minlength="8">
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                {{ 'auth.register.submit'|trans }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">
+                        {{ 'auth.register.have_account'|trans }}
+                        <a href="{{ path('app_login') }}">{{ 'auth.register.login'|trans }}</a>
+                    </p>
+                    <hr>
+                    <p class="mb-2">{{ 'auth.register.or_login_with'|trans }}</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ path('auth_google') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-google"></i> Google
+                        </a>
+                        <a href="{{ path('auth_facebook') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

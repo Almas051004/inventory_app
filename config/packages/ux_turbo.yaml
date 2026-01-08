@@ -1,0 +1,10 @@
+# Symfony UX Turbo configuration
+turbo:
+    # Disable broadcasting by default (we don't use real-time features yet)
+    broadcast:
+        enabled: false
+
+# Enable stateless CSRF protection for forms and logins/logouts
+framework:
+    csrf_protection:
+        check_header: true

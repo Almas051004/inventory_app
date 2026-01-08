@@ -1,0 +1,302 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'admin.users.title'|trans }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ 'admin.users.title'|trans }}</h1>
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary">{{ 'admin.users.back_to_dashboard'|trans }}</a>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="search" class="form-label">{{ 'admin.users.search_label'|trans }}</label>
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ search }}" placeholder="{{ 'admin.users.search_placeholder'|trans }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">{{ 'admin.users.status_label'|trans }}</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="all" {{ status == 'all' ? 'selected' : '' }}>{{ 'admin.users.status_all'|trans }}</option>
+                            <option value="active" {{ status == 'active' ? 'selected' : '' }}>{{ 'admin.users.status_active'|trans }}</option>
+                            <option value="blocked" {{ status == 'blocked' ? 'selected' : '' }}>{{ 'admin.users.status_blocked'|trans }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label">{{ 'admin.users.sort_label'|trans }}</label>
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="created_at" {{ sort == 'created_at' ? 'selected' : '' }}>{{ 'admin.users.sort_created_at'|trans }}</option>
+                            <option value="username" {{ sort == 'username' ? 'selected' : '' }}>{{ 'admin.users.sort_username'|trans }}</option>
+                            <option value="email" {{ sort == 'email' ? 'selected' : '' }}>{{ 'admin.users.table.email'|trans }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="order" class="form-label">{{ 'admin.users.order_label'|trans }}</label>
+                        <select class="form-select" id="order" name="order">
+                            <option value="desc" {{ order == 'desc' ? 'selected' : '' }}>{{ 'admin.users.order_desc'|trans }}</option>
+                            <option value="asc" {{ order == 'asc' ? 'selected' : '' }}>{{ 'admin.users.order_asc'|trans }}</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">{{ 'admin.users.apply_filters'|trans }}</button>
+                        <a href="{{ path('admin_users') }}" class="btn btn-outline-secondary">{{ 'admin.users.reset_filters'|trans }}</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar с действиями -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ 'admin.users.selected_users'|trans({'%count%': '<span id="selected-count">0</span>'})|raw }}</strong>
+                    </div>
+                    <div class="btn-group" role="group" id="bulk-actions" style="display: none;">
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="bulkAction('block')">
+                            <i class="bi bi-lock"></i> {{ 'admin.bulk.block'|trans }}
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="bulkAction('unblock')">
+                            <i class="bi bi-unlock"></i> {{ 'admin.bulk.unblock'|trans }}
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="bulkAction('make_admin')">
+                            <i class="bi bi-shield-plus"></i> {{ 'admin.bulk.make_admin'|trans }}
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="bulkAction('remove_admin')">
+                            <i class="bi bi-shield-minus"></i> {{ 'admin.bulk.remove_admin'|trans }}
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="bulkAction('delete')">
+                            <i class="bi bi-trash"></i> {{ 'admin.bulk.delete'|trans }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Таблица пользователей -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ 'admin.users.users_count'|trans({'%count%': users|length}) }}</h5>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="select-all" onchange="toggleSelectAll(this)">
+                    <label class="form-check-label" for="select-all">
+                        {{ 'admin.users.select_all'|trans }}
+                    </label>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="50">
+                                    <input type="checkbox" class="form-check-input" id="select-all-header" onchange="toggleSelectAll(this)">
+                                </th>
+                                <th>{{ 'admin.dashboard.table.user'|trans }}</th>
+                                <th>{{ 'admin.users.table.email'|trans }}</th>
+                                <th>{{ 'admin.users.table.roles'|trans }}</th>
+                                <th>{{ 'admin.dashboard.table.status'|trans }}</th>
+                                <th>{{ 'admin.users.table.registration_date'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input user-checkbox"
+                                           value="{{ user.id }}" onchange="updateSelectedCount()">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if user.avatarUrl %}
+                                            <img src="{{ user.avatarUrl }}" alt="Avatar" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-bold">{{ user.username ?? ('admin.users.table.no_username'|trans) }}</div>
+                                            <small class="text-muted">ID: {{ user.id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% for role in user.roles %}
+                                        {% if role != 'ROLE_USER' %}
+                                            <span class="badge bg-primary me-1">{{ role }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if user.roles|length == 1 %}
+                                        <span class="text-muted">{{ 'admin.dashboard.table.user'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.isBlocked %}
+                                        <span class="badge bg-danger">{{ 'admin.dashboard.table.status_blocked'|trans }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ 'admin.dashboard.table.status_active'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.createdAt|date('d.m.Y H:i') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if users is empty %}
+                <div class="text-center py-4">
+                    <p class="text-muted">{{ 'admin.users.no_users_found'|trans }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения массового действия -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1" aria-labelledby="bulkActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkActionModalLabel">{{ 'modal.action_confirmation_title'|trans }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'modal.close'|trans }}"></button>
+            </div>
+            <div class="modal-body">
+                <p id="bulkActionMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'modal.cancel'|trans }}</button>
+                <button type="button" class="btn btn-primary" id="confirmBulkAction">{{ 'modal.action_confirmation_confirm'|trans }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Форма для массовых действий (тестовая версия) -->
+<form id="bulkActionForm" method="POST" action="{{ path('admin_users_bulk_action') }}" style="display: none;">
+    <input type="hidden" name="_token" value="{{ csrf_token('bulk_action') }}">
+    <input type="hidden" name="action" id="bulkActionType">
+    <input type="hidden" name="user_ids" id="bulkUserIds">
+</form>
+
+
+<script>
+// Глобальные переменные для отслеживания выбранных пользователей
+window.selectedUsers = [];
+
+function updateSelectedCount() {
+    // Очищаем массив
+    window.selectedUsers = [];
+
+    // Собираем выбранные чекбоксы
+    var checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    checkboxes.forEach(function(checkbox) {
+        window.selectedUsers.push(checkbox.value);
+    });
+
+    var count = window.selectedUsers.length;
+
+    // Обновляем UI
+    var countElement = document.getElementById('selected-count');
+    if (countElement) {
+        countElement.textContent = count;
+    }
+
+    var bulkActionsElement = document.getElementById('bulk-actions');
+    if (bulkActionsElement) {
+        bulkActionsElement.style.display = count > 0 ? 'block' : 'none';
+    }
+}
+
+function toggleSelectAll(checkbox) {
+    var isChecked = checkbox.checked;
+    var checkboxes = document.querySelectorAll('.user-checkbox');
+
+    checkboxes.forEach(function(cb) {
+        cb.checked = isChecked;
+    });
+
+    updateSelectedCount();
+}
+
+function bulkAction(action) {
+    if (window.selectedUsers.length === 0) {
+        showNotification('{{ 'admin.users.select_users_for_action'|trans }}');
+        return;
+    }
+
+    var userIds = window.selectedUsers;
+    var message = '';
+
+    switch (action) {
+        case 'block':
+            message = '{{ 'admin.users.block_action_warning'|trans({'%count%': 'count'}) }}'.replace('count', userIds.length);
+            break;
+        case 'unblock':
+            message = '{{ 'admin.users.unblock_action_warning'|trans({'%count%': 'count'}) }}'.replace('count', userIds.length);
+            break;
+        case 'make_admin':
+            message = '{{ 'admin.users.make_admin_action_warning'|trans({'%count%': 'count'}) }}'.replace('count', userIds.length);
+            break;
+        case 'remove_admin':
+            message = '{{ 'admin.users.remove_admin_action_warning'|trans({'%count%': 'count'}) }}'.replace('count', userIds.length);
+            break;
+        case 'delete':
+            message = '{{ 'admin.users.delete_action_warning'|trans({'%count%': 'count'}) }}'.replace('count', userIds.length);
+            break;
+        default:
+            showNotification('{{ 'admin.users.unknown_action'|trans({'%action%': 'action'}) }}'.replace('action', action));
+            return;
+    }
+
+    // Сохраняем данные для обработчика подтверждения
+    window.pendingBulkAction = action;
+    window.pendingUserIds = userIds;
+
+    // Показываем модальное окно подтверждения
+    document.getElementById('bulkActionMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('bulkActionModal'));
+    modal.show();
+}
+
+// Обновляем счётчик при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+
+    // Обработчик подтверждения массового действия
+    document.getElementById('confirmBulkAction').addEventListener('click', function() {
+        const actionInput = document.getElementById('bulkActionType');
+        const userIdsInput = document.getElementById('bulkUserIds');
+        const form = document.getElementById('bulkActionForm');
+
+        if (actionInput && userIdsInput && form) {
+            actionInput.value = window.pendingBulkAction;
+            userIdsInput.value = window.pendingUserIds.join(',');
+            form.submit();
+        } else {
+            showNotification('{{ 'admin.users.form_elements_not_found'|trans }}');
+        }
+
+        // Закрываем модальное окно
+        const modal = bootstrap.Modal.getInstance(document.getElementById('bulkActionModal'));
+        modal.hide();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'admin/dashboard.html.twig' %}
+
+{% block title %}{{ 'admin.errors.error_details'|trans }} - {{ parent() }}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ 'admin.errors.error_details'|trans }}</h5>
+                    <a href="{{ path('admin_errors') }}" class="btn btn-secondary btn-sm">
+                        ← {{ 'admin.errors.back_to_list'|trans }}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <strong>{{ 'admin.errors.error_id'|trans }}:</strong>
+                        <code>{{ error.errorId }}</code>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>{{ 'admin.errors.created_at'|trans }}:</strong>
+                        {{ error.createdAt|date('d.m.Y H:i:s') }}
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <strong>{{ 'admin.errors.user'|trans }}:</strong>
+                        {% if error.user %}
+                            {{ error.user.username ?: error.user.email }}
+                            (ID: {{ error.user.id }})
+                        {% else %}
+                            <span class="text-muted">{{ 'admin.errors.anonymous'|trans }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>{{ 'admin.errors.ip_address'|trans }}:</strong>
+                        {{ error.ipAddress ?: 'N/A' }}
+                    </div>
+                </div>
+
+                {% if error.url %}
+                <div class="mb-4">
+                    <strong>{{ 'admin.errors.url'|trans }}:</strong>
+                    <code>{{ error.url }}</code>
+                </div>
+                {% endif %}
+
+                {% if error.userAgent %}
+                <div class="mb-4">
+                    <strong>{{ 'admin.errors.user_agent'|trans }}:</strong>
+                    <div class="bg-light p-2 rounded small">
+                        {{ error.userAgent }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <strong>{{ 'admin.errors.message'|trans }}:</strong>
+                    <div class="bg-danger text-white p-3 rounded">
+                        {{ error.message }}
+                    </div>
+                </div>
+
+                {% if error.trace %}
+                <div class="mb-4">
+                    <strong>{{ 'admin.errors.stack_trace'|trans }}:</strong>
+                    <details>
+                        <summary class="btn btn-outline-secondary btn-sm">{{ 'admin.errors.show_trace'|trans }}</summary>
+                        <pre class="bg-dark text-white p-3 rounded mt-2 small" style="max-height: 400px; overflow-y: auto;">{{ error.trace }}</pre>
+                    </details>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

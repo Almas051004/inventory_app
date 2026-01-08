@@ -1,0 +1,432 @@
+                <!-- Вкладка Поля -->
+                <div class="tab-pane fade" id="fields" role="tabpanel" aria-labelledby="fields-tab">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">{{ 'fields.title'|trans }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">
+                                        {{ 'fields.description'|trans|nl2br }}
+                                        {{ 'fields.description_limit'|trans }}
+                                    </p>
+
+                                    <form method="post" action="{{ path('inventory_fields', {'id': inventory.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('save_fields') }}">
+
+                                        <!-- Строковые поля (single-line text) -->
+                                        <h6 class="mt-4 mb-3">{{ 'fields.string_title'|trans }}</h6>
+                                        {% for i in 1..3 %}
+                                            {% set isChecked = false %}
+                                            {% set fieldName = '' %}
+                                            {% set fieldDesc = '' %}
+                                            {% set showInTable = false %}
+                                            {% set minLength = null %}
+                                            {% set maxLength = null %}
+                                            {% set regex = null %}
+
+                                            {% if i == 1 %}
+                                                {% set isChecked = inventory.getCustomString1State() %}
+                                                {% set fieldName = inventory.getCustomString1Name() %}
+                                                {% set fieldDesc = inventory.getCustomString1Description() %}
+                                                {% set showInTable = inventory.getCustomString1ShowInTable() %}
+                                                {% set minLength = inventory.getCustomString1MinLength() %}
+                                                {% set maxLength = inventory.getCustomString1MaxLength() %}
+                                                {% set regex = inventory.getCustomString1Regex() %}
+                                            {% elseif i == 2 %}
+                                                {% set isChecked = inventory.getCustomString2State() %}
+                                                {% set fieldName = inventory.getCustomString2Name() %}
+                                                {% set fieldDesc = inventory.getCustomString2Description() %}
+                                                {% set showInTable = inventory.getCustomString2ShowInTable() %}
+                                                {% set minLength = inventory.getCustomString2MinLength() %}
+                                                {% set maxLength = inventory.getCustomString2MaxLength() %}
+                                                {% set regex = inventory.getCustomString2Regex() %}
+                                            {% elseif i == 3 %}
+                                                {% set isChecked = inventory.getCustomString3State() %}
+                                                {% set fieldName = inventory.getCustomString3Name() %}
+                                                {% set fieldDesc = inventory.getCustomString3Description() %}
+                                                {% set showInTable = inventory.getCustomString3ShowInTable() %}
+                                                {% set minLength = inventory.getCustomString3MinLength() %}
+                                                {% set maxLength = inventory.getCustomString3MaxLength() %}
+                                                {% set regex = inventory.getCustomString3Regex() %}
+                                            {% endif %}
+
+                                            <div class="field-group mb-4 p-3 border rounded">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           id="custom_string{{ i }}_state"
+                                                           name="custom_string{{ i }}_state"
+                                                           {{ isChecked ? 'checked' : '' }}>
+                                                    <label class="form-check-label fw-bold" for="custom_string{{ i }}_state">
+                                                        {{ 'fields.string_field'|trans }} {{ i }}
+                                                    </label>
+                                                </div>
+                                                <div class="field-settings ms-4" style="{{ isChecked ? '' : 'display: none;' }}">
+                                                    <div class="mb-2">
+                                                        <label for="custom_string{{ i }}_name" class="form-label">{{ 'fields.field_name'|trans }}</label>
+                                                        <input type="text" class="form-control"
+                                                               id="custom_string{{ i }}_name"
+                                                               name="custom_string{{ i }}_name"
+                                                               value="{{ fieldName ?: '' }}"
+                                                               maxlength="255">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label for="custom_string{{ i }}_description" class="form-label">{{ 'fields.field_description'|trans }}</label>
+                                                        <textarea class="form-control"
+                                                                  id="custom_string{{ i }}_description"
+                                                                  name="custom_string{{ i }}_description"
+                                                                  rows="2">{{ fieldDesc ?: '' }}</textarea>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                               id="custom_string{{ i }}_show_in_table"
+                                                               name="custom_string{{ i }}_show_in_table"
+                                                               {{ showInTable ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="custom_string{{ i }}_show_in_table">
+                                                            {{ 'fields.show_in_table'|trans }}
+                                                        </label>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col-md-6">
+                                                            <label for="custom_string{{ i }}_min_length" class="form-label">{{ 'fields.min_length'|trans }}</label>
+                                                            <input type="number" class="form-control"
+                                                                   id="custom_string{{ i }}_min_length"
+                                                                   name="custom_string{{ i }}_min_length"
+                                                                   value="{{ minLength ?: '' }}"
+                                                                   min="0" max="1000">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="custom_string{{ i }}_max_length" class="form-label">{{ 'fields.max_length'|trans }}</label>
+                                                            <input type="number" class="form-control"
+                                                                   id="custom_string{{ i }}_max_length"
+                                                                   name="custom_string{{ i }}_max_length"
+                                                                   value="{{ maxLength ?: '' }}"
+                                                                   min="0" max="1000">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <label for="custom_string{{ i }}_regex" class="form-label">{{ 'fields.regex'|trans }}</label>
+                                                        <input type="text" class="form-control"
+                                                               id="custom_string{{ i }}_regex"
+                                                               name="custom_string{{ i }}_regex"
+                                                               value="{{ regex ?: '' }}"
+                                                               maxlength="500"
+                                                               placeholder="{{ 'fields.regex_placeholder'|trans }}">
+                                                        <div class="form-text">{{ 'fields.regex_help'|trans }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Многострочный текст -->
+                                        <h6 class="mt-4 mb-3">{{ 'fields.text_title'|trans }}</h6>
+                                        {% for i in 1..3 %}
+                                            {% set isChecked = false %}
+                                            {% set fieldName = '' %}
+                                            {% set fieldDesc = '' %}
+                                            {% set showInTable = false %}
+
+                                            {% if i == 1 %}
+                                                {% set isChecked = inventory.getCustomText1State() %}
+                                                {% set fieldName = inventory.getCustomText1Name() %}
+                                                {% set fieldDesc = inventory.getCustomText1Description() %}
+                                                {% set showInTable = inventory.getCustomText1ShowInTable() %}
+                                            {% elseif i == 2 %}
+                                                {% set isChecked = inventory.getCustomText2State() %}
+                                                {% set fieldName = inventory.getCustomText2Name() %}
+                                                {% set fieldDesc = inventory.getCustomText2Description() %}
+                                                {% set showInTable = inventory.getCustomText2ShowInTable() %}
+                                            {% elseif i == 3 %}
+                                                {% set isChecked = inventory.getCustomText3State() %}
+                                                {% set fieldName = inventory.getCustomText3Name() %}
+                                                {% set fieldDesc = inventory.getCustomText3Description() %}
+                                                {% set showInTable = inventory.getCustomText3ShowInTable() %}
+                                            {% endif %}
+
+                                            <div class="field-group mb-4 p-3 border rounded">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           id="custom_text{{ i }}_state"
+                                                           name="custom_text{{ i }}_state"
+                                                           {{ isChecked ? 'checked' : '' }}>
+                                                    <label class="form-check-label fw-bold" for="custom_text{{ i }}_state">
+                                                        {{ 'fields.text_field'|trans }} {{ i }}
+                                                    </label>
+                                                </div>
+                                                <div class="field-settings ms-4" style="{{ isChecked ? '' : 'display: none;' }}">
+                                                    <div class="mb-2">
+                                                        <label for="custom_text{{ i }}_name" class="form-label">{{ 'fields.field_name'|trans }}</label>
+                                                        <input type="text" class="form-control"
+                                                               id="custom_text{{ i }}_name"
+                                                               name="custom_text{{ i }}_name"
+                                                               value="{{ fieldName ?: '' }}"
+                                                               maxlength="255">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label for="custom_text{{ i }}_description" class="form-label">{{ 'fields.field_description'|trans }}</label>
+                                                        <textarea class="form-control"
+                                                                  id="custom_text{{ i }}_description"
+                                                                  name="custom_text{{ i }}_description"
+                                                                  rows="2">{{ fieldDesc ?: '' }}</textarea>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                               id="custom_text{{ i }}_show_in_table"
+                                                               name="custom_text{{ i }}_show_in_table"
+                                                               {{ showInTable ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="custom_text{{ i }}_show_in_table">
+                                                            {{ 'fields.show_in_table'|trans }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Числовые поля -->
+                                        <h6 class="mt-4 mb-3">{{ 'fields.int_title'|trans }}</h6>
+                                        {% for i in 1..3 %}
+                                            {% set isChecked = false %}
+                                            {% set fieldName = '' %}
+                                            {% set fieldDesc = '' %}
+                                            {% set showInTable = false %}
+                                            {% set minValue = null %}
+                                            {% set maxValue = null %}
+
+                                            {% if i == 1 %}
+                                                {% set isChecked = inventory.getCustomInt1State() %}
+                                                {% set fieldName = inventory.getCustomInt1Name() %}
+                                                {% set fieldDesc = inventory.getCustomInt1Description() %}
+                                                {% set showInTable = inventory.getCustomInt1ShowInTable() %}
+                                                {% set minValue = inventory.getCustomInt1MinValue() %}
+                                                {% set maxValue = inventory.getCustomInt1MaxValue() %}
+                                            {% elseif i == 2 %}
+                                                {% set isChecked = inventory.getCustomInt2State() %}
+                                                {% set fieldName = inventory.getCustomInt2Name() %}
+                                                {% set fieldDesc = inventory.getCustomInt2Description() %}
+                                                {% set showInTable = inventory.getCustomInt2ShowInTable() %}
+                                                {% set minValue = inventory.getCustomInt2MinValue() %}
+                                                {% set maxValue = inventory.getCustomInt2MaxValue() %}
+                                            {% elseif i == 3 %}
+                                                {% set isChecked = inventory.getCustomInt3State() %}
+                                                {% set fieldName = inventory.getCustomInt3Name() %}
+                                                {% set fieldDesc = inventory.getCustomInt3Description() %}
+                                                {% set showInTable = inventory.getCustomInt3ShowInTable() %}
+                                                {% set minValue = inventory.getCustomInt3MinValue() %}
+                                                {% set maxValue = inventory.getCustomInt3MaxValue() %}
+                                            {% endif %}
+
+                                            <div class="field-group mb-4 p-3 border rounded">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           id="custom_int{{ i }}_state"
+                                                           name="custom_int{{ i }}_state"
+                                                           {{ isChecked ? 'checked' : '' }}>
+                                                    <label class="form-check-label fw-bold" for="custom_int{{ i }}_state">
+                                                        {{ 'fields.numeric_field'|trans }} {{ i }}
+                                                    </label>
+                                                </div>
+                                                <div class="field-settings ms-4" style="{{ isChecked ? '' : 'display: none;' }}">
+                                                    <div class="mb-2">
+                                                        <label for="custom_int{{ i }}_name" class="form-label">{{ 'fields.field_name'|trans }}</label>
+                                                        <input type="text" class="form-control"
+                                                               id="custom_int{{ i }}_name"
+                                                               name="custom_int{{ i }}_name"
+                                                               value="{{ fieldName ?: '' }}"
+                                                               maxlength="255">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label for="custom_int{{ i }}_description" class="form-label">{{ 'fields.field_description'|trans }}</label>
+                                                        <textarea class="form-control"
+                                                                  id="custom_int{{ i }}_description"
+                                                                  name="custom_int{{ i }}_description"
+                                                                  rows="2">{{ fieldDesc ?: '' }}</textarea>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                               id="custom_int{{ i }}_show_in_table"
+                                                               name="custom_int{{ i }}_show_in_table"
+                                                               {{ showInTable ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="custom_int{{ i }}_show_in_table">
+                                                            {{ 'fields.show_in_table'|trans }}
+                                                        </label>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col-md-6">
+                                                            <label for="custom_int{{ i }}_min_value" class="form-label">{{ 'fields.min_value'|trans }}</label>
+                                                            <input type="number" class="form-control"
+                                                                   id="custom_int{{ i }}_min_value"
+                                                                   name="custom_int{{ i }}_min_value"
+                                                                   value="{{ minValue ?: '' }}">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="custom_int{{ i }}_max_value" class="form-label">{{ 'fields.max_value'|trans }}</label>
+                                                            <input type="number" class="form-control"
+                                                                   id="custom_int{{ i }}_max_value"
+                                                                   name="custom_int{{ i }}_max_value"
+                                                                   value="{{ maxValue ?: '' }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Булевы поля -->
+                                        <h6 class="mt-4 mb-3">{{ 'fields.bool_title'|trans }}</h6>
+                                        {% for i in 1..3 %}
+                                            {% set isChecked = false %}
+                                            {% set fieldName = '' %}
+                                            {% set fieldDesc = '' %}
+                                            {% set showInTable = false %}
+
+                                            {% if i == 1 %}
+                                                {% set isChecked = inventory.getCustomBool1State() %}
+                                                {% set fieldName = inventory.getCustomBool1Name() %}
+                                                {% set fieldDesc = inventory.getCustomBool1Description() %}
+                                                {% set showInTable = inventory.getCustomBool1ShowInTable() %}
+                                            {% elseif i == 2 %}
+                                                {% set isChecked = inventory.getCustomBool2State() %}
+                                                {% set fieldName = inventory.getCustomBool2Name() %}
+                                                {% set fieldDesc = inventory.getCustomBool2Description() %}
+                                                {% set showInTable = inventory.getCustomBool2ShowInTable() %}
+                                            {% elseif i == 3 %}
+                                                {% set isChecked = inventory.getCustomBool3State() %}
+                                                {% set fieldName = inventory.getCustomBool3Name() %}
+                                                {% set fieldDesc = inventory.getCustomBool3Description() %}
+                                                {% set showInTable = inventory.getCustomBool3ShowInTable() %}
+                                            {% endif %}
+
+                                            <div class="field-group mb-4 p-3 border rounded">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           id="custom_bool{{ i }}_state"
+                                                           name="custom_bool{{ i }}_state"
+                                                           {{ isChecked ? 'checked' : '' }}>
+                                                    <label class="form-check-label fw-bold" for="custom_bool{{ i }}_state">
+                                                        {{ 'fields.boolean_field'|trans }} {{ i }}
+                                                    </label>
+                                                </div>
+                                                <div class="field-settings ms-4" style="{{ isChecked ? '' : 'display: none;' }}">
+                                                    <div class="mb-2">
+                                                        <label for="custom_bool{{ i }}_name" class="form-label">{{ 'fields.field_name'|trans }}</label>
+                                                        <input type="text" class="form-control"
+                                                               id="custom_bool{{ i }}_name"
+                                                               name="custom_bool{{ i }}_name"
+                                                               value="{{ fieldName ?: '' }}"
+                                                               maxlength="255">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label for="custom_bool{{ i }}_description" class="form-label">{{ 'fields.field_description'|trans }}</label>
+                                                        <textarea class="form-control"
+                                                                  id="custom_bool{{ i }}_description"
+                                                                  name="custom_bool{{ i }}_description"
+                                                                  rows="2">{{ fieldDesc ?: '' }}</textarea>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                               id="custom_bool{{ i }}_show_in_table"
+                                                               name="custom_bool{{ i }}_show_in_table"
+                                                               {{ showInTable ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="custom_bool{{ i }}_show_in_table">
+                                                            {{ 'fields.show_in_table'|trans }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Поля ссылок -->
+                                        <h6 class="mt-4 mb-3">{{ 'fields.link_title'|trans }}</h6>
+                                        {% for i in 1..3 %}
+                                            {% set isChecked = false %}
+                                            {% set fieldName = '' %}
+                                            {% set fieldDesc = '' %}
+                                            {% set showInTable = false %}
+
+                                            {% if i == 1 %}
+                                                {% set isChecked = inventory.getCustomLink1State() %}
+                                                {% set fieldName = inventory.getCustomLink1Name() %}
+                                                {% set fieldDesc = inventory.getCustomLink1Description() %}
+                                                {% set showInTable = inventory.getCustomLink1ShowInTable() %}
+                                            {% elseif i == 2 %}
+                                                {% set isChecked = inventory.getCustomLink2State() %}
+                                                {% set fieldName = inventory.getCustomLink2Name() %}
+                                                {% set fieldDesc = inventory.getCustomLink2Description() %}
+                                                {% set showInTable = inventory.getCustomLink2ShowInTable() %}
+                                            {% elseif i == 3 %}
+                                                {% set isChecked = inventory.getCustomLink3State() %}
+                                                {% set fieldName = inventory.getCustomLink3Name() %}
+                                                {% set fieldDesc = inventory.getCustomLink3Description() %}
+                                                {% set showInTable = inventory.getCustomLink3ShowInTable() %}
+                                            {% endif %}
+
+                                            <div class="field-group mb-4 p-3 border rounded">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           id="custom_link{{ i }}_state"
+                                                           name="custom_link{{ i }}_state"
+                                                           {{ isChecked ? 'checked' : '' }}>
+                                                    <label class="form-check-label fw-bold" for="custom_link{{ i }}_state">
+                                                        {{ 'fields.link_field'|trans }} {{ i }}
+                                                    </label>
+                                                </div>
+                                                <div class="field-settings ms-4" style="{{ isChecked ? '' : 'display: none;' }}">
+                                                    <div class="mb-2">
+                                                        <label for="custom_link{{ i }}_name" class="form-label">{{ 'fields.field_name'|trans }}</label>
+                                                        <input type="text" class="form-control"
+                                                               id="custom_link{{ i }}_name"
+                                                               name="custom_link{{ i }}_name"
+                                                               value="{{ fieldName ?: '' }}"
+                                                               maxlength="255">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label for="custom_link{{ i }}_description" class="form-label">{{ 'fields.field_description'|trans }}</label>
+                                                        <textarea class="form-control"
+                                                                  id="custom_link{{ i }}_description"
+                                                                  name="custom_link{{ i }}_description"
+                                                                  rows="2">{{ fieldDesc ?: '' }}</textarea>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                               id="custom_link{{ i }}_show_in_table"
+                                                               name="custom_link{{ i }}_show_in_table"
+                                                               {{ showInTable ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="custom_link{{ i }}_show_in_table">
+                                                            {{ 'fields.show_in_table'|trans }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Кнопки -->
+                                        <div class="mt-4">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-save"></i> {{ 'settings.save'|trans }}
+                                            </button>
+                                            <a href="{{ path('inventory_show', {'id': inventory.id}) }}" class="btn btn-secondary ms-2">
+                                                <i class="fa fa-times"></i> {{ 'cancel'|trans }}
+                                            </a>
+                                        </div>
+                                    </form>
+
+                                    <!-- Auto-save индикатор -->
+                                    <div id="fields-autosave" class="mt-3 d-none">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                <span class="visually-hidden">{{ 'fields.saving'|trans }}</span>
+                                            </div>
+                                            <small class="text-muted">{{ 'settings.saving'|trans }}</small>
+                                        </div>
+                                    </div>
+
+                                    <div id="fields-saved" class="mt-3 d-none">
+                                        <small class="text-success">
+                                            <i class="bi bi-check"></i> {{ 'settings.saved'|trans }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
