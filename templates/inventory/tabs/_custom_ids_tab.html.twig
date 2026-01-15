@@ -1,0 +1,181 @@
+                <!-- Вкладка Кастомные ID -->
+                <div class="tab-pane fade" id="custom-ids" role="tabpanel" aria-labelledby="custom-ids-tab">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">{{ 'custom_ids.title'|trans }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">
+                                        {{ 'custom_ids.description'|trans|nl2br }}
+                                        {{ 'custom_id.description'|trans }}
+                                        <br><small class="text-info">{{ 'custom_ids.default_format_note'|trans }}</small>
+                                    </p>
+
+                                    <form method="post" action="{{ path('inventory_custom_ids', {'id': inventory.id}) }}" id="customIdsForm">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('save_custom_ids') }}">
+                                        <input type="hidden" name="custom_id_format" id="customIdFormatInput" value="{{ inventory.customIdFormat ? inventory.customIdFormat|json_encode : '{"parts":[]}' }}">
+
+                                        <!-- Панель управления -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="mb-0">{{ 'custom_ids.format_elements'|trans }}</h6>
+                                            <div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" id="addFormatElement">
+                                                    <i class="bi bi-plus"></i> {{ 'custom_ids.add_element'|trans }}
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="resetFormat">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> {{ 'custom_ids.reset'|trans }}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Область для drag-and-drop элементов -->
+                                        <div class="border rounded p-3 mb-3" id="formatElements" style="min-height: 200px;">
+                                            <div class="text-center text-muted" id="emptyState">
+                                                <i class="bi bi-diagram-3 fs-1"></i>
+                                                <p class="mt-2">{{'custom_ids.drag_drop_area'|trans}}</p>
+                                                <small>{{'custom_ids.default_format_note'|trans}}</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Предпросмотр -->
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">{{'custom_ids.preview'|trans}}</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="previewId" readonly>
+                                                <button class="btn btn-outline-secondary" type="button" id="generatePreview">
+                                                    <i class="bi bi-arrow-repeat"></i> {{'custom_ids.generate'|trans}}
+                                                </button>
+                                            </div>
+                                            <div class="form-text">
+                                                {{'custom_ids.preview_help'|trans}}
+                                            </div>
+                                        </div>
+
+                                        <!-- Доступные типы элементов -->
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">{{'custom_ids.available_types'|trans}}:</label>
+                                            <div class="row g-2" id="availableTypes">
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="fixed_text">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-type fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.fixed_text'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.fixed_text_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="random_20bit">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-hash fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.random_20bit'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.random_20bit_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="random_32bit">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-hash fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.random_32bit'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.random_32bit_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="random_6digit">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-123 fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.random_6digit'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.random_6digit_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="random_9digit">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-123 fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.random_9digit'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.random_9digit_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="guid">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-fingerprint fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.guid'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.guid_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="datetime">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-calendar-event fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.datetime'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.datetime_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="card h-100 type-card" data-type="sequence">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-sort-numeric-up fs-5 me-2"></i>
+                                                                <div>
+                                                                    <strong>{{'custom_ids.sequence'|trans}}</strong>
+                                                                    <br><small class="text-muted">{{'custom_ids.sequence_desc'|trans}}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Кнопки сохранения -->
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
+                                                {{'custom_ids.cancel'|trans}}
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check"></i> {{'custom_ids.save_format'|trans}}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

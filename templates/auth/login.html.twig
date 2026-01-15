@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'auth.login.title'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Сообщения об успехе -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <!-- Сообщения об ошибках -->
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">{{ 'auth.login.title'|trans }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('app_login') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('authenticate') }}">
+
+                        {% if error %}
+                            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">{{ 'auth.login.username'|trans }}</label>
+                            <input type="text" class="form-control" id="username" name="_username" value="{{ last_username }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">{{ 'auth.login.password'|trans }}</label>
+                            <input type="password" class="form-control" id="password" name="_password" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                {{ 'auth.login.submit'|trans }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-1">
+                        <a href="{{ path('auth_forgot_password') }}">{{ 'auth.login.forgot_password'|trans }}</a>
+                    </p>
+                    <p class="mb-0">
+                        {{ 'auth.login.no_account'|trans }}
+                        <a href="{{ path('auth_register') }}">{{ 'auth.login.register'|trans }}</a>
+                    </p>
+                    <hr>
+                    <p class="mb-2">{{ 'auth.login.or_login_with'|trans }}</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ path('auth_google') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-google"></i> Google
+                        </a>
+                        <a href="{{ path('auth_facebook') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

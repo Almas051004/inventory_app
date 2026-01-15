@@ -1,0 +1,190 @@
+/* Theme variables for dark theme only */
+[data-bs-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #adb5bd;
+    --border-color: #495057;
+    --navbar-bg: #2d2d2d;
+    --navbar-text: #ffffff;
+    --card-bg: #2d2d2d;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark theme specific overrides */
+[data-bs-theme="dark"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .navbar {
+    background-color: var(--navbar-bg) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-bs-theme="dark"] .navbar .navbar-brand,
+[data-bs-theme="dark"] .navbar .nav-link {
+    color: var(--navbar-text) !important;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 0.125rem 0.25rem var(--shadow);
+}
+
+[data-bs-theme="dark"] .table {
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .table thead th {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .table tbody tr {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .table-hover tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-bs-theme="dark"] .jumbotron {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .badge {
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Custom styles for the application */
+
+main {
+    flex: 1;
+}
+
+/* Tag cloud styles */
+.tag-cloud .badge {
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.tag-cloud .badge:hover {
+    transform: scale(1.05);
+    opacity: 0.8;
+}
+
+/* Table hover effects are now handled by Bootstrap default for light theme */
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .table th:nth-child(1),
+    .table td:nth-child(1) {
+        width: 40px;
+        min-width: 40px;
+    }
+
+    /* Hide less important columns on mobile */
+    .table th:nth-child(3),
+    .table td:nth-child(3),
+    .table th:nth-child(4),
+    .table td:nth-child(4) {
+        display: none;
+    }
+
+    /* Make toolbar buttons smaller */
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Stack toolbar buttons vertically on very small screens */
+    @media (max-width: 576px) {
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .d-flex.justify-content-between > div:last-child {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+    }
+}
+
+/* Toolbar animations */
+#itemsToolbar,
+#ownedToolbar,
+#accessibleToolbar {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Better checkbox styling */
+.form-check-input {
+    border-radius: 0.25rem;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Link preview styles */
+.link-preview {
+    max-width: 300px;
+}
+
+.link-preview img {
+    transition: transform 0.2s ease;
+}
+
+.link-preview img:hover {
+    transform: scale(1.05);
+}
+
+.pdf-preview-icon {
+    transition: all 0.2s ease;
+}
+
+.pdf-preview-icon:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="dark"] .pdf-preview-icon {
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-secondary);
+}
+
+[data-bs-theme="dark"] .pdf-preview-icon:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

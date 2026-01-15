@@ -1,0 +1,76 @@
+                <!-- Вкладка Обсуждение -->
+                <div class="tab-pane fade" id="discussion" role="tabpanel" aria-labelledby="discussion-tab">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">{{ 'discussion.title'|trans }}</h5>
+                                    <small class="text-muted">
+                                        <span id="comments-count">0</span> {{ 'discussion.comments_count'|trans({'%count%': 0})|replace({'0': ''}) }}
+                                    </small>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Форма добавления комментария -->
+                                    {% if app.user %}
+                                    <div class="mb-4" id="add-comment-form">
+                                        <form id="comment-form">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('add_comment') }}">
+                                            <div class="mb-3">
+                                                <label for="comment-content" class="form-label">
+                                                    {{ 'discussion.add_comment'|trans }}
+                                                    <small class="text-muted">{{ 'discussion.markdown_support'|trans }}</small>
+                                                </label>
+                                                <textarea class="form-control"
+                                                          id="comment-content"
+                                                          name="content"
+                                                          rows="3"
+                                                          placeholder="{{ 'discussion.placeholder'|trans }}"
+                                                          maxlength="10000"></textarea>
+                                                <div class="form-text">
+                                                    {{ 'discussion.max_length'|trans }}
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" id="submit-comment">
+                                                <i class="fa fa-paper-plane"></i> {{ 'discussion.send'|trans }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Контейнер для комментариев -->
+                                    <div id="comments-container">
+                                        <div class="text-center text-muted" id="loading-comments">
+                                            <div class="spinner-border spinner-border-sm" role="status">
+                                                <span class="visually-hidden">{{ 'loading'|trans }}...</span>
+                                            </div>
+                                            {{ 'loading.comments'|trans }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">{{ 'discussion.markdown_help_title'|trans }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <h6 class="text-muted mb-2">{{ 'discussion.markdown_syntax'|trans }}</h6>
+                                            <small class="text-muted">
+                                                {{ 'discussion.markdown_help'|trans|raw }}
+                                            </small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6 class="text-muted mb-2">{{ 'discussion.markdown_preview'|trans }}</h6>
+                                            <small>
+                                                {{ 'discussion.markdown_help_examples'|trans|raw }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

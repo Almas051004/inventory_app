@@ -1,0 +1,3020 @@
+<style>
+/* Стили для комментариев */
+.comment-item {
+    transition: all 0.3s ease;
+}
+
+.comment-item.new-comment {
+    background-color: #e8f5e8;
+    border-color: #28a745 !important;
+    animation: highlightNewComment 3s ease-out;
+}
+
+@keyframes highlightNewComment {
+    0% { background-color: #e8f5e8; border-color: #28a745; }
+    50% { background-color: #d4edda; border-color: #28a745; }
+    100% { background-color: inherit; border-color: inherit; }
+}
+
+.comment-content {
+    word-wrap: break-word;
+}
+
+.comment-content h1,
+.comment-content h2,
+.comment-content h3,
+.comment-content h4,
+.comment-content h5,
+.comment-content h6 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.comment-content p {
+    margin-bottom: 0.5rem;
+}
+
+.comment-content ul,
+.comment-content ol {
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+.comment-content blockquote {
+    border-left: 4px solid #dee2e6;
+    padding-left: 1rem;
+    margin: 0.5rem 0;
+    color: #6c757d;
+}
+
+.comment-content code {
+    background-color: #f8f9fa;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+.comment-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+}
+
+.comment-content pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* Адаптивность для комментариев */
+@media (max-width: 768px) {
+    .comment-item {
+        padding: 1rem;
+    }
+
+    .comment-content {
+        font-size: 0.9rem;
+    }
+}
+
+/* Стили для drag-and-drop в кастомных ID */
+.format-element {
+    transition: all 0.2s ease;
+    cursor: grab;
+    position: relative;
+}
+
+.format-element:active {
+    cursor: grabbing;
+}
+
+.format-element.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg) scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.format-element.drag-over {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+    transform: scale(1.02);
+    box-shadow: 0 0 0 2px #2196f3;
+}
+
+.format-element.drag-over::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 0%, rgba(33, 150, 243, 0.1) 25%, transparent 50%, rgba(33, 150, 243, 0.1) 75%, transparent 100%);
+    background-size: 20px 20px;
+    animation: slide 1s linear infinite;
+    pointer-events: none;
+}
+
+/* Стили для вставки между элементами */
+.format-element.insert-before::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #2196f3;
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(33, 150, 243, 0.5);
+}
+
+.format-element.insert-after::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #2196f3;
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(33, 150, 243, 0.5);
+}
+
+@keyframes slide {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 20px; }
+}
+
+.format-element .bi-grip-vertical {
+    transition: color 0.2s ease;
+}
+
+.format-element:hover .bi-grip-vertical {
+    color: #495057 !important;
+}
+
+/* Предотвращаем выделение текста при drag */
+.format-element.dragging * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+</style>
+
+<!-- Bootstrap Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">{{ 'modal.confirmation_title'|trans }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmationModalBody">
+                {{ 'modal.action_confirmation_message'|trans }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'modal.cancel'|trans }}</button>
+                <button type="button" class="btn btn-danger" id="confirmationModalConfirm">{{ 'modal.action_confirmation_confirm'|trans }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Функция для показа Bootstrap модального окна подтверждения
+function showConfirmationModal(message, callback) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    const modalBody = document.getElementById('confirmationModalBody');
+    const confirmBtn = document.getElementById('confirmationModalConfirm');
+
+    // Устанавливаем сообщение
+    modalBody.textContent = message;
+
+    // Очищаем предыдущие обработчики
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    // Добавляем новый обработчик
+    newConfirmBtn.addEventListener('click', function() {
+        modal.hide();
+        if (callback) callback(true);
+    });
+
+    // Обработчик для кнопки отмены
+    const cancelBtn = document.querySelector('#confirmationModal .btn-secondary');
+    const cancelHandler = function() {
+        modal.hide();
+        if (callback) callback(false);
+    };
+
+    // Очищаем предыдущие обработчики отмены
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    newCancelBtn.addEventListener('click', cancelHandler);
+
+    // Обработчик для закрытия по клику на фон или крестик
+    const modalElement = document.getElementById('confirmationModal');
+    const closeHandler = function() {
+        if (callback) callback(false);
+    };
+
+    modalElement.addEventListener('hidden.bs.modal', closeHandler, { once: true });
+
+    // Показываем модальное окно
+    modal.show();
+}
+
+// JavaScript для управления вкладками и настройками полей
+document.addEventListener('DOMContentLoaded', function() {
+    // Автоматическая активация вкладки Fields если URL содержит #fields
+    if (window.location.hash === '#fields') {
+        const fieldsTab = document.getElementById('fields-tab');
+        const fieldsPane = document.getElementById('fields');
+        if (fieldsTab && fieldsPane) {
+            // Убираем активные классы у других вкладок
+            document.querySelectorAll('.nav-link.active').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-pane.active').forEach(pane => pane.classList.remove('active', 'show'));
+
+            // Активируем вкладку Fields
+            fieldsTab.classList.add('active');
+            fieldsPane.classList.add('active', 'show');
+        }
+    }
+
+    // Автоматическая активация вкладки Custom IDs если URL содержит #custom-ids
+    if (window.location.hash === '#custom-ids') {
+        const customIdsTab = document.getElementById('custom-ids-tab');
+        const customIdsPane = document.getElementById('custom-ids');
+        if (customIdsTab && customIdsPane) {
+            // Убираем активные классы у других вкладок
+            document.querySelectorAll('.nav-link.active').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-pane.active').forEach(pane => pane.classList.remove('active', 'show'));
+
+            // Активируем вкладку Custom IDs
+            customIdsTab.classList.add('active');
+            customIdsPane.classList.add('active', 'show');
+        }
+    }
+
+    // JavaScript для показа/скрытия настроек полей при включении/отключении
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][id$="_state"]');
+
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const fieldGroup = this.closest('.field-group');
+            const fieldSettings = fieldGroup.querySelector('.field-settings');
+
+            if (this.checked) {
+                fieldSettings.style.display = 'block';
+            } else {
+                fieldSettings.style.display = 'none';
+            }
+        });
+    });
+
+    // Инициализация видимости настроек при загрузке страницы
+    checkboxes.forEach(function(checkbox) {
+        const fieldGroup = checkbox.closest('.field-group');
+        const fieldSettings = fieldGroup.querySelector('.field-settings');
+
+        if (checkbox.checked) {
+            fieldSettings.style.display = 'block';
+        } else {
+            fieldSettings.style.display = 'none';
+        }
+    });
+
+    // === JavaScript для управления кастомными ID ===
+
+    window.formatParts = [];
+    let formatElements, emptyState, customIdFormatInput, previewId;
+    let customIdsInitialized = false;
+
+    // Функции для работы с кастомными ID (определяем до initCustomIds)
+    function showTypeSelector() {
+        // Показываем модальное окно или просто прокручиваем к доступным типам
+        const availableTypes = document.getElementById('availableTypes');
+        if (availableTypes) {
+            availableTypes.scrollIntoView({ behavior: 'smooth' });
+            // Добавляем визуальную подсказку
+            availableTypes.style.boxShadow = '0 0 0 3px rgba(13, 110, 253, 0.25)';
+            setTimeout(() => {
+                availableTypes.style.boxShadow = '';
+            }, 2000);
+        }
+    }
+
+    function addFormatElement(type) {
+        const elementConfig = {
+            type: type,
+            id: Date.now() + Math.random() // Уникальный ID для элемента
+        };
+
+        // Добавляем специфичные настройки для разных типов
+        switch (type) {
+            case 'fixed_text':
+                elementConfig.text = '';
+                break;
+            case 'random_20bit':
+            case 'random_32bit':
+                elementConfig.leading_zeros = false;
+                break;
+            case 'datetime':
+                elementConfig.format = 'Y-m-d_H-i-s';
+                break;
+            case 'sequence':
+                elementConfig.start_value = 1;
+                elementConfig.step = 1;
+                elementConfig.digits = 4;
+                elementConfig.leading_zeros = true;
+                break;
+        }
+
+        window.formatParts.push(elementConfig);
+        window.renderFormatElements();
+        window.updatePreview();
+    }
+
+    window.renderFormatElements = function() {
+        if (!formatElements || !emptyState) return; // Проверяем инициализацию
+
+        // Очищаем контейнер
+        formatElements.innerHTML = '';
+
+        if (window.formatParts.length === 0) {
+            formatElements.appendChild(emptyState);
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+
+        window.formatParts.forEach((part, index) => {
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'format-element d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded';
+            elementDiv.draggable = true;
+            elementDiv.dataset.index = index;
+
+            const typeInfo = getTypeInfo(part.type);
+            const settingsHtml = getElementSettingsHtml(part, index);
+
+            elementDiv.innerHTML = `
+                <div class="d-flex align-items-center flex-grow-1">
+                    <i class="bi bi-grip-vertical me-3 text-muted" style="cursor: grab;"></i>
+                    <i class="${typeInfo.icon} me-2"></i>
+                    <div class="flex-grow-1">
+                        <strong>${typeInfo.name}</strong>
+                        <small class="text-muted d-block">${typeInfo.description}</small>
+                        ${settingsHtml}
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFormatElement(${index})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+
+            formatElements.appendChild(elementDiv);
+        });
+
+        // Инициализируем drag-and-drop
+        initializeDragAndDrop();
+    }
+
+    window.updatePreview = function() {
+        if (!customIdFormatInput || !previewId) return; // Проверяем инициализацию
+
+        // Обновляем скрытое поле формы
+        customIdFormatInput.value = JSON.stringify({ parts: window.formatParts });
+
+        // Генерируем предпросмотр
+        if (window.formatParts.length === 0) {
+            previewId.value = '{{ 'js.custom_ids.format_not_configured'|trans }}';
+            return;
+        }
+
+        // Для предпросмотра используем простые примеры
+        let preview = '';
+        window.formatParts.forEach(part => {
+            switch (part.type) {
+                case 'fixed_text':
+                    preview += part.text || '[TEXT]';
+                    break;
+                case 'random_20bit':
+                    preview += part.leading_zeros ? '00012345' : '12345';
+                    break;
+                case 'random_32bit':
+                    preview += part.leading_zeros ? '0000123456' : '123456';
+                    break;
+                case 'random_6digit':
+                    preview += '123456';
+                    break;
+                case 'random_9digit':
+                    preview += '123456789';
+                    break;
+                case 'guid':
+                    preview += 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+                    break;
+                case 'datetime':
+                    preview += '2025-01-15_14-30-45';
+                    break;
+                case 'sequence':
+                    const digits = part.digits || 4;
+                    const exampleValue = '42';
+                    if (part.leading_zeros) {
+                        preview += str_pad(exampleValue, digits, '0', 'STR_PAD_LEFT');
+                    } else {
+                        preview += exampleValue;
+                    }
+                    break;
+            }
+        });
+
+        previewId.value = preview;
+    }
+
+    let draggedElement = null;
+    let draggedIndex = -1;
+
+    function initializeDragAndDrop() {
+        if (!formatElements) return; // Проверяем инициализацию
+
+        formatElements.addEventListener('dragstart', function(e) {
+            // Проверяем, что перетаскиваем именно за grip иконку или сам элемент, но не форму
+            const target = e.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA' ||
+                target.classList.contains('form-check-input') || target.closest('input, select, textarea')) {
+                e.preventDefault();
+                return false;
+            }
+
+            draggedElement = e.target.closest('.format-element');
+            if (draggedElement) {
+                draggedIndex = parseInt(draggedElement.dataset.index);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedIndex.toString());
+                draggedElement.style.opacity = '0.5';
+
+                // Добавляем визуальную подсказку
+                draggedElement.classList.add('dragging');
+            }
+        });
+
+        formatElements.addEventListener('dragend', function(e) {
+            // Всегда сбрасываем визуальные эффекты для перетаскиваемого элемента
+            if (draggedElement) {
+                draggedElement.style.opacity = '1';
+                draggedElement.classList.remove('dragging');
+            }
+
+            // Убираем все подсветки
+            document.querySelectorAll('.format-element').forEach(el => {
+                el.classList.remove('drag-over', 'insert-before', 'insert-after');
+            });
+
+            // Сбрасываем переменные
+            draggedElement = null;
+            draggedIndex = -1;
+        });
+
+        // Также обрабатываем dragend на document уровне для случаев, когда drop происходит вне контейнера
+        document.addEventListener('dragend', function(e) {
+            if (draggedElement) {
+                draggedElement.style.opacity = '1';
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+                draggedIndex = -1;
+            }
+
+            // Убираем все подсветки
+            document.querySelectorAll('.format-element').forEach(el => {
+                el.classList.remove('drag-over', 'insert-before', 'insert-after');
+            });
+        });
+
+        formatElements.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            // Убираем все предыдущие подсветки
+            document.querySelectorAll('.format-element').forEach(el => {
+                el.classList.remove('drag-over', 'insert-before', 'insert-after');
+            });
+
+            // Определяем позицию вставки
+            const mouseY = e.clientY;
+            const elements = Array.from(formatElements.querySelectorAll('.format-element'));
+
+            let insertIndex = -1;
+            let insertType = '';
+
+            for (let i = 0; i < elements.length; i++) {
+                const element = elements[i];
+                if (element === draggedElement) continue;
+
+                const rect = element.getBoundingClientRect();
+                const elementTop = rect.top;
+                const elementBottom = rect.bottom;
+                const elementMiddle = elementTop + (rect.height / 2);
+
+                // Определяем зону вставки для каждого элемента
+                if (mouseY < elementMiddle) {
+                    // Курсор в верхней половине элемента - вставка перед ним
+                    element.classList.add('insert-before');
+                    insertIndex = i;
+                    insertType = 'before';
+                    break;
+                } else if (i === elements.length - 1 || mouseY < elements[i + 1].getBoundingClientRect().top + (elements[i + 1].getBoundingClientRect().height / 2)) {
+                    // Курсор в нижней половине последнего элемента или между элементами - вставка после
+                    element.classList.add('insert-after');
+                    insertIndex = i + 1;
+                    insertType = 'after';
+                    break;
+                }
+            }
+
+            // Если не нашли позицию, вставляем в конец
+            if (insertIndex === -1 && elements.length > 0) {
+                const lastElement = elements[elements.length - 1];
+                if (lastElement !== draggedElement) {
+                    lastElement.classList.add('insert-after');
+                    insertIndex = elements.length;
+                    insertType = 'after';
+                }
+            }
+        });
+
+        formatElements.addEventListener('dragleave', function(e) {
+            // Проверяем, покинули ли мы контейнер formatElements
+            const relatedTarget = e.relatedTarget;
+            if (!formatElements.contains(relatedTarget)) {
+                document.querySelectorAll('.format-element').forEach(el => {
+                    el.classList.remove('drag-over', 'insert-before', 'insert-after');
+                });
+            }
+        });
+
+        formatElements.addEventListener('drop', function(e) {
+            e.preventDefault();
+
+            // Убираем все визуальные подсказки
+            document.querySelectorAll('.format-element').forEach(el => {
+                el.classList.remove('drag-over', 'insert-before', 'insert-after');
+            });
+
+            if (draggedIndex >= 0) {
+                // Проверяем, что drop произошел внутри контейнера formatElements
+                const rect = formatElements.getBoundingClientRect();
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+
+                const isInsideContainer = mouseX >= rect.left && mouseX <= rect.right &&
+                                        mouseY >= rect.top && mouseY <= rect.bottom;
+
+                if (isInsideContainer) {
+                    // Определяем позицию вставки по координатам мыши
+                    const elements = Array.from(formatElements.querySelectorAll('.format-element'));
+
+                    let targetIndex = draggedIndex;
+
+                    for (let i = 0; i < elements.length; i++) {
+                        const element = elements[i];
+                        if (element === draggedElement) continue;
+
+                        const rect = element.getBoundingClientRect();
+                        const elementTop = rect.top;
+                        const elementBottom = rect.bottom;
+                        const elementMiddle = elementTop + (rect.height / 2);
+
+                        // Определяем зону вставки для каждого элемента
+                        if (mouseY < elementMiddle) {
+                            // Курсор в верхней половине элемента - вставка перед ним
+                            targetIndex = i;
+                            break;
+                        } else if (i === elements.length - 1 || mouseY < elements[i + 1].getBoundingClientRect().top + (elements[i + 1].getBoundingClientRect().height / 2)) {
+                            // Курсор в нижней половине последнего элемента или между элементами - вставка после
+                            targetIndex = i + 1;
+                            break;
+                        }
+                    }
+
+                    // Если не нашли позицию, вставляем в конец
+                    if (targetIndex === draggedIndex && elements.length > 0) {
+                        targetIndex = elements.length;
+                    }
+
+                    // Корректируем индекс, если мы удаляем элемент перед вставкой
+                    if (targetIndex > draggedIndex) {
+                        targetIndex--;
+                    }
+
+                    // Нормализуем targetIndex
+                    targetIndex = Math.max(0, Math.min(targetIndex, window.formatParts.length - 1));
+
+                    // Если позиция изменилась, перемещаем элемент
+                    if (targetIndex !== draggedIndex) {
+                        // Перемещаем элемент в массиве
+                        const [movedElement] = window.formatParts.splice(draggedIndex, 1);
+                        window.formatParts.splice(targetIndex, 0, movedElement);
+
+                        window.renderFormatElements();
+                        window.updatePreview();
+                    }
+                }
+            }
+
+            // Всегда сбрасываем визуальные эффекты и переменные
+            if (draggedElement) {
+                draggedElement.style.opacity = '1';
+                draggedElement.classList.remove('dragging');
+            }
+
+            draggedElement = null;
+            draggedIndex = -1;
+        });
+    }
+
+    function getTypeInfo(type) {
+        const types = {
+            'fixed_text': { name: 'Fixed Text', icon: 'bi-type', description: '{{ 'js.custom_ids.types.fixed_text.description'|trans }}' },
+            'random_20bit': { name: '20-bit Random', icon: 'bi-hash', description: '{{ 'js.custom_ids.types.random_20bit.description'|trans }}' },
+            'random_32bit': { name: '32-bit Random', icon: 'bi-hash', description: '{{ 'js.custom_ids.types.random_32bit.description'|trans }}' },
+            'random_6digit': { name: '6-digit Random', icon: 'bi-123', description: '{{ 'js.custom_ids.types.random_6digit.description'|trans }}' },
+            'random_9digit': { name: '9-digit Random', icon: 'bi-123', description: '{{ 'js.custom_ids.types.random_9digit.description'|trans }}' },
+            'guid': { name: 'GUID', icon: 'bi-fingerprint', description: '{{ 'js.custom_ids.types.guid.description'|trans }}' },
+            'datetime': { name: 'Date/Time', icon: 'bi-calendar-event', description: '{{ 'js.custom_ids.types.datetime.description'|trans }}' },
+            'sequence': { name: 'Sequence', icon: 'bi-sort-numeric-up', description: '{{ 'js.custom_ids.types.sequence.description'|trans }}' }
+        };
+        return types[type] || { name: 'Unknown', icon: 'bi-question', description: '' };
+    }
+
+    function getElementSettingsHtml(part, index) {
+        let html = '';
+
+        switch (part.type) {
+            case 'fixed_text':
+                html = `<input type="text" class="form-control form-control-sm mt-1"
+                               id="custom_text_${index}" name="custom_text_${index}"
+                               placeholder="{{ 'custom_id.enter_text'|trans }}" value="${part.text || ''}"
+                               onchange="updateElementSetting(${index}, 'text', this.value)">`;
+                break;
+            case 'random_20bit':
+            case 'random_32bit':
+                html = `<div class="form-check mt-1">
+                            <input class="form-check-input" type="checkbox" id="leading_zeros_${index}"
+                                   name="leading_zeros_${index}"
+                                   ${part.leading_zeros ? 'checked' : ''}
+                                   onchange="updateElementSetting(${index}, 'leading_zeros', this.checked)">
+                            <label class="form-check-label small" for="leading_zeros_${index}">
+                                {{ 'custom_id.leading_zeros'|trans }}
+                            </label>
+                        </div>`;
+                break;
+            case 'datetime':
+                html = `<select class="form-select form-select-sm mt-1" id="datetime_format_${index}" name="datetime_format_${index}"
+                                onchange="updateElementSetting(${index}, 'format', this.value)">
+                            <option value="Y-m-d_H-i-s" ${part.format === 'Y-m-d_H-i-s' ? 'selected' : ''}>YYYY-MM-DD_HH-MM-SS</option>
+                            <option value="YmdHis" ${part.format === 'YmdHis' ? 'selected' : ''}>YYYYMMDDHHMMSS</option>
+                            <option value="d.m.Y" ${part.format === 'd.m.Y' ? 'selected' : ''}>DD.MM.YYYY</option>
+                        </select>`;
+                break;
+            case 'sequence':
+                html = `<div class="row g-1 mt-1">
+                            <div class="col-6">
+                                <input type="number" class="form-control form-control-sm" id="seq_start_${index}" name="seq_start_${index}"
+                                       placeholder="{{ 'custom_id.start'|trans }}" value="${part.start_value || 1}"
+                                       onchange="updateElementSetting(${index}, 'start_value', parseInt(this.value))">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control form-control-sm" id="seq_step_${index}" name="seq_step_${index}"
+                                       placeholder="{{ 'custom_id.step'|trans }}" value="${part.step || 1}"
+                                       onchange="updateElementSetting(${index}, 'step', parseInt(this.value))">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control form-control-sm" id="seq_digits_${index}" name="seq_digits_${index}"
+                                       placeholder="{{ 'custom_id.digits'|trans }}" value="${part.digits || 4}"
+                                       onchange="updateElementSetting(${index}, 'digits', parseInt(this.value))">
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="seq_leading_${index}"
+                                           name="seq_leading_${index}"
+                                           ${part.leading_zeros ? 'checked' : ''}
+                                           onchange="updateElementSetting(${index}, 'leading_zeros', this.checked)">
+                                    <label class="form-check-label small" for="seq_leading_${index}">{{ 'js.custom_ids.sequence.leading_zeros'|trans }}</label>
+                                </div>
+                            </div>
+                        </div>`;
+                break;
+        }
+
+        return html;
+    }
+
+    window.updateElementSetting = function(index, key, value) {
+        window.formatParts[index][key] = value;
+        window.updatePreview();
+    };
+
+    // Глобальная функция для удаления элемента
+    window.removeFormatElement = function(index) {
+        window.formatParts.splice(index, 1);
+        window.renderFormatElements();
+        window.updatePreview();
+    };
+
+    function str_pad(str, length, pad_string, pad_type) {
+        // Простая реализация str_pad
+        str = String(str);
+        while (str.length < length) {
+            if (pad_type === 'STR_PAD_LEFT') {
+                str = pad_string + str;
+            } else {
+                str = str + pad_string;
+            }
+        }
+        return str;
+    }
+
+    // Функция инициализации кастомных ID
+    function initCustomIds() {
+        if (customIdsInitialized) return; // Инициализируем только один раз
+
+        formatElements = document.getElementById('formatElements');
+        emptyState = document.getElementById('emptyState');
+        customIdFormatInput = document.getElementById('customIdFormatInput');
+        previewId = document.getElementById('previewId');
+
+        if (!formatElements || !customIdFormatInput || !previewId) {
+            // Элементы еще не готовы (вкладка не активна)
+            return false;
+        }
+
+        // Загружаем сохраненный формат
+        try {
+            const savedFormat = JSON.parse(customIdFormatInput.value);
+            window.formatParts = savedFormat.parts || [];
+            renderFormatElements();
+        } catch (e) {
+            window.formatParts = [];
+        }
+
+        // Обработчик добавления элемента
+        const addButton = document.getElementById('addFormatElement');
+        if (addButton) {
+            addButton.addEventListener('click', function() {
+                showTypeSelector();
+            });
+        }
+
+        // Обработчик сброса формата
+        const resetButton = document.getElementById('resetFormat');
+        if (resetButton) {
+            resetButton.addEventListener('click', function() {
+                showConfirmationModal('{{ 'inventory.confirm_reset_id_format'|trans }}', function(confirmed) {
+                    if (confirmed) {
+                        window.formatParts = [];
+                        renderFormatElements();
+                        updatePreview();
+                    }
+                });
+            });
+        }
+
+        // Обработчик генерации предпросмотра
+        const generateButton = document.getElementById('generatePreview');
+        if (generateButton) {
+            generateButton.addEventListener('click', updatePreview);
+        }
+
+        // Обработчик клика на типы элементов
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const type = this.dataset.type;
+                addFormatElement(type);
+            });
+        });
+
+        // Инициализация предпросмотра
+        updatePreview();
+
+        customIdsInitialized = true;
+        return true;
+    }
+
+    // Инициализируем кастомные ID при активации вкладки
+    const customIdsTab = document.getElementById('custom-ids-tab');
+    if (customIdsTab) {
+        customIdsTab.addEventListener('shown.bs.tab', function() {
+            window.location.hash = '#custom-ids';
+            setTimeout(initCustomIds, 100); // Небольшая задержка для загрузки DOM
+        });
+    }
+
+    // Если мы уже на вкладке custom-ids при загрузке страницы
+    if (window.location.hash === '#custom-ids') {
+        setTimeout(initCustomIds, 100);
+    }
+});
+
+// Управление доступом к инвентарю
+document.addEventListener('DOMContentLoaded', function() {
+    let currentSort = 'name'; // 'name' или 'email'
+
+    let userSearchTimeout;
+
+    // Глобальный флаг для предотвращения дублирования обработчиков доступа
+    let accessHandlersInitialized = false;
+
+    // Глобальные переменные для элементов DOM
+    let userSearchInput, searchUsersBtn, userSuggestions, userSuggestionsList,
+        accessList, noAccessUsers, sortByName, sortByEmail, isPublicCheckbox;
+
+    // Функция инициализации обработчиков событий для вкладки доступа
+    function initAccessManagement() {
+        // Если обработчики уже инициализированы, выходим
+        if (accessHandlersInitialized) {
+            return;
+        }
+
+        // Элементы DOM
+        userSearchInput = document.getElementById('userSearch');
+        searchUsersBtn = document.getElementById('searchUsersBtn');
+        userSuggestions = document.getElementById('userSuggestions');
+        userSuggestionsList = document.getElementById('userSuggestionsList');
+        accessList = document.getElementById('accessList');
+        noAccessUsers = document.getElementById('noAccessUsers');
+        sortByName = document.getElementById('sortByName');
+        sortByEmail = document.getElementById('sortByEmail');
+        isPublicCheckbox = document.getElementById('isPublic');
+
+        if (!userSearchInput || !accessList) {
+            return;
+        }
+
+        // Отмечаем, что обработчики инициализированы
+        accessHandlersInitialized = true;
+
+        // Загружаем список пользователей с доступом
+        loadAccessList();
+
+        // Поиск пользователей
+        if (userSearchInput) {
+            userSearchInput.addEventListener('input', function() {
+                clearTimeout(userSearchTimeout);
+                const query = this.value.trim();
+
+                if (query.length < 2) {
+                    hideUserSuggestions();
+                    return;
+                }
+
+                // Отменяем предыдущий поиск, если он был инициирован кнопкой
+                if (window.userSearchInProgress) {
+                    window.userSearchInProgress = false;
+                }
+
+                userSearchTimeout = setTimeout(() => searchUsers(query), 300);
+            });
+
+            userSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideUserSuggestions();
+                    this.value = '';
+                }
+            });
+        }
+
+        if (searchUsersBtn) {
+            searchUsersBtn.addEventListener('click', function() {
+                // Предотвращаем множественные клики
+                if (this.disabled) return;
+
+                const query = userSearchInput.value.trim();
+                if (query.length >= 2) {
+                    this.disabled = true;
+                    this.innerHTML = '<i class="bi bi-hourglass"></i>';
+
+                    searchUsers(query).finally(() => {
+                        this.disabled = false;
+                        this.innerHTML = '<i class="bi bi-search"></i>';
+                    });
+                }
+            });
+        }
+
+        // Сортировка
+        if (sortByName) {
+            sortByName.addEventListener('click', function() {
+                setSortMode('name');
+            });
+        }
+
+        if (sortByEmail) {
+            sortByEmail.addEventListener('click', function() {
+                setSortMode('email');
+            });
+        }
+
+        // Публичный доступ
+        if (isPublicCheckbox) {
+            isPublicCheckbox.addEventListener('change', function() {
+                updatePublicAccess(this.checked);
+            });
+        }
+    }
+
+    function searchUsers(query) {
+        // Предотвращаем множественные одновременные запросы
+        if (window.userSearchInProgress) {
+            return Promise.resolve(); // Возвращаем resolved Promise, чтобы finally сработал
+        }
+        window.userSearchInProgress = true;
+
+        return fetch(`{{ path('inventory_api_users', {'id': inventory.id}) }}?q=${encodeURIComponent(query)}&limit=10`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showNotification(data.error);
+                    return;
+                }
+                showUserSuggestions(data);
+            })
+            .catch(error => {
+                console.error('Ошибка поиска пользователей:', error);
+            })
+            .finally(() => {
+                window.userSearchInProgress = false;
+            });
+    }
+
+    function showUserSuggestions(users) {
+        if (users.length === 0) {
+            hideUserSuggestions();
+            return;
+        }
+
+        userSuggestionsList.innerHTML = '';
+
+        users.forEach(user => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+            item.innerHTML = `
+                <div>
+                    <strong>${escapeHtml(user.display_name)}</strong>
+                    <small class="text-muted">${escapeHtml(user.email)}</small>
+                </div>
+                <span class="badge bg-primary">{{ 'js.access.add_user'|trans }}</span>
+            `;
+
+            item.addEventListener('click', () => addUserAccess(user.id, user.display_name));
+            userSuggestionsList.appendChild(item);
+        });
+
+        userSuggestions.classList.remove('d-none');
+    }
+
+    function hideUserSuggestions() {
+        userSuggestions.classList.add('d-none');
+        userSuggestionsList.innerHTML = '';
+    }
+
+    function addUserAccess(userId, displayName) {
+        fetch(`{{ path('inventory_api_access', {'id': inventory.id}) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId, access_type: 'write' }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error);
+                return;
+            }
+
+            // Очищаем поиск
+            userSearchInput.value = '';
+            hideUserSuggestions();
+
+            // Перезагружаем список доступа
+            loadAccessList();
+
+            // Показываем уведомление
+            showNotification('{{ 'js.access.user_added'|trans({'%displayName%': 'displayName'}) }}'.replace('displayName', displayName), 'success');
+        })
+        .catch(error => {
+            console.error('Ошибка добавления доступа:', error);
+            showNotification('{{ 'ajax.error_add_user'|trans }}');
+        });
+    }
+
+    function loadAccessList() {
+        fetch(`{{ path('inventory_api_access_list', {'id': inventory.id}) }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Ошибка загрузки списка доступа:', data.error);
+                    return;
+                }
+
+        if (!accessList) {
+            return;
+        }
+
+        accessList.innerHTML = '';
+
+                const accesses = data.accesses || [];
+
+        if (!accesses || accesses.length === 0) {
+            if (noAccessUsers) noAccessUsers.classList.remove('d-none');
+            return;
+        }
+
+        if (noAccessUsers) noAccessUsers.classList.add('d-none');
+
+        // Сортировка
+            accesses.sort((a, b) => {
+                const aValue = currentSort === 'name' ? a.user.username : a.user.email;
+                const bValue = currentSort === 'name' ? b.user.username : b.user.email;
+                return aValue.localeCompare(bValue);
+            });
+
+            accesses.forEach(access => {
+            const user = access.user;
+            const accessTypeLabel = access.access_type === 'write' ? '{{ 'access.write_access'|trans }}' : '{{ 'access.read_access'|trans }}';
+            const badgeClass = access.access_type === 'write' ? 'bg-primary' : 'bg-secondary';
+
+            const item = document.createElement('div');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center';
+            item.innerHTML = `
+                <div>
+                    <strong>${escapeHtml(user.display_name || user.username || user.email)}</strong>
+                    <small class="text-muted d-block">${escapeHtml(user.email)}</small>
+                    <span class="badge ${badgeClass}">${accessTypeLabel}</span>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-user-id="${user.id}">
+                    <i class="bi bi-trash"></i> {{ 'js.access.remove_user'|trans }}
+                </button>
+            `;
+
+            // Обработчик удаления
+            const removeBtn = item.querySelector('button');
+                    removeBtn.addEventListener('click', () => removeUserAccess(user.id, user.display_name || user.username || user.email));
+
+            accessList.appendChild(item);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки списка доступа:', error);
+            });
+    }
+
+    function removeUserAccess(userId, displayName) {
+        const message = '{{ 'inventory.confirm_remove_user_access'|trans({'%name%': 'displayName'}) }}'.replace('displayName', displayName);
+        showConfirmationModal(message, function(confirmed) {
+            if (!confirmed) {
+                return;
+            }
+
+        fetch(`{{ path('inventory_api_remove_access', {'id': inventory.id}) }}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error);
+                return;
+            }
+
+            // Перезагружаем список доступа
+            loadAccessList();
+
+            // Показываем уведомление
+            showNotification('{{ 'js.access.user_removed'|trans({'%displayName%': 'displayName'}) }}'.replace('displayName', displayName), 'success');
+        })
+        .catch(error => {
+            console.error('Ошибка удаления доступа:', error);
+            showNotification('{{ 'ajax.error_remove_access'|trans }}');
+        });
+        });
+    }
+
+    function setSortMode(mode) {
+        currentSort = mode;
+
+        // Обновляем активную кнопку
+        sortByName.classList.toggle('active', mode === 'name');
+        sortByEmail.classList.toggle('active', mode === 'email');
+
+        // Перезагружаем список
+        loadAccessList();
+    }
+
+    function updatePublicAccess(isPublic) {
+        fetch(`{{ path('inventory_api_public_access', {'id': inventory.id}) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ is_public: isPublic }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error);
+                // Возвращаем чекбокс в предыдущее состояние
+                isPublicCheckbox.checked = !isPublic;
+                return;
+            }
+
+            showNotification(
+                isPublic ? '{{ 'js.access.public_enabled'|trans }}' : '{{ 'js.access.public_disabled'|trans }}',
+                'success'
+            );
+        })
+        .catch(error => {
+            console.error('Ошибка обновления публичного доступа:', error);
+            showNotification('{{ 'ajax.error_public_access'|trans }}');
+            // Возвращаем чекбокс в предыдущее состояние
+            isPublicCheckbox.checked = !isPublic;
+        });
+    }
+
+    function showNotification(message, type = 'info') {
+        // Создаем уведомление
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${escapeHtml(message)}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Автоматически скрываем через 3 секунды
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Функция проверки видимости вкладки доступа
+    function checkAccessTabVisibility() {
+        const accessTabPane = document.getElementById('access-settings');
+        const accessTab = document.getElementById('access-settings-tab');
+
+        // Проверяем, активна ли вкладка
+        if (accessTab?.classList.contains('active') || window.location.hash === '#access-settings') {
+            initAccessManagement();
+        }
+    }
+
+    // Инициализируем обработчики при первом показе вкладки доступа
+    function initAccessManagementOnce() {
+        const accessTab = document.getElementById('access-settings-tab');
+        if (!accessTab) return;
+
+        // Обработчик для инициализации при первом показе вкладки
+        const initOnShow = function() {
+            window.location.hash = '#access-settings';
+            initAccessManagement();
+            // Удаляем обработчик после первого выполнения
+            accessTab.removeEventListener('shown.bs.tab', initOnShow);
+        };
+
+        accessTab.addEventListener('shown.bs.tab', initOnShow);
+
+        // Проверяем, активна ли вкладка при загрузке
+        if (accessTab.classList.contains('active') || window.location.hash === '#access-settings') {
+            initAccessManagement();
+        }
+
+        // Слушаем изменения URL
+        window.addEventListener('hashchange', function() {
+            if (window.location.hash === '#access-settings') {
+                initAccessManagement();
+            }
+        });
+    }
+
+    initAccessManagementOnce();
+});
+
+// Auto-save для общих настроек инвентаря
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализируем версию инвентаря
+    window.inventoryVersion = {{ inventory.version }};
+
+    let autoSaveTimer;
+    let hasUnsavedChanges = false;
+    let originalData = {};
+
+    // Функция инициализации auto-save для вкладки общих настроек
+    function initGeneralSettingsAutoSave() {
+        if (window.generalSettingsAutoSaveInitialized) {
+            return;
+        }
+        window.generalSettingsAutoSaveInitialized = true;
+
+        // Получаем форму общих настроек
+        const form = document.querySelector('#general-settings form');
+        if (!form) return;
+
+        // Сохраняем оригинальные значения
+        saveOriginalData(form);
+
+        // Отслеживаем изменения
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                hasUnsavedChanges = true;
+                scheduleAutoSave();
+            });
+
+            input.addEventListener('change', function() {
+                hasUnsavedChanges = true;
+                scheduleAutoSave();
+            });
+        });
+
+        console.log('General settings auto-save initialized');
+    }
+
+    function saveOriginalData(form) {
+        const inputs = form.querySelectorAll('input, textarea, select');
+        originalData = {};
+
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                originalData[input.name] = input.checked;
+            } else {
+                originalData[input.name] = input.value;
+            }
+        });
+    }
+
+    function hasDataChanged(form) {
+        const inputs = form.querySelectorAll('input, textarea, select');
+
+        for (let input of inputs) {
+            let currentValue;
+            if (input.type === 'checkbox') {
+                currentValue = input.checked;
+            } else {
+                currentValue = input.value;
+            }
+
+            if (currentValue !== originalData[input.name]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function scheduleAutoSave() {
+        clearTimeout(autoSaveTimer);
+
+        // Показываем индикатор изменений
+        showAutoSaveIndicator();
+
+        // Запускаем auto-save через 8 секунд
+        autoSaveTimer = setTimeout(() => {
+            if (hasUnsavedChanges) {
+                performAutoSave();
+            }
+        }, 8000);
+    }
+
+    function performAutoSave() {
+        const form = document.querySelector('#general-settings form');
+        if (!form || !hasDataChanged(form)) {
+            hasUnsavedChanges = false;
+            hideAutoSaveIndicator();
+            return;
+        }
+
+        // Собираем данные формы
+        const formData = new FormData(form);
+        const data = {};
+
+        for (let [key, value] of formData.entries()) {
+            if (key === '_token') continue; // Пропускаем CSRF токен
+
+            // Для чекбоксов
+            if (key === 'is_public') {
+                data[key] = value === 'on';
+            } else {
+                data[key] = value;
+            }
+        }
+
+        // Добавляем версию для optimistic locking
+        data.version = window.inventoryVersion || {{ inventory.version }};
+
+        showSavingIndicator();
+
+        fetch(`{{ path('inventory_general_settings', {'id': inventory.id}) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => {
+            if (response.status === 409) {
+                // Optimistic locking conflict
+                return response.json().then(result => {
+                    throw new Error(result.error || '{{ 'inventory.concurrent_modification_error'|trans }}');
+                });
+            }
+            return response.json();
+        })
+        .then(result => {
+            hideSavingIndicator();
+
+            if (result.success) {
+                hasUnsavedChanges = false;
+                showSavedIndicator();
+                // Обновляем оригинальные данные
+                saveOriginalData(form);
+                // Обновляем версию в inventory объекте
+                if (result.version) {
+                    window.inventoryVersion = result.version;
+                }
+
+                setTimeout(() => {
+                    hideSavedIndicator();
+                }, 3000);
+            } else {
+                console.error('Auto-save failed:', result.error);
+                showSaveError(result.error || '{{ 'js.general_settings.save_error'|trans }}');
+            }
+        })
+        .catch(error => {
+            hideSavingIndicator();
+            console.error('Auto-save error:', error);
+            showSaveError('{{ 'js.general_settings.network_error'|trans }}');
+        });
+    }
+
+    function showAutoSaveIndicator() {
+        const indicator = document.getElementById('general-settings-autosave');
+        if (indicator) {
+            indicator.classList.remove('d-none');
+        }
+    }
+
+    function hideAutoSaveIndicator() {
+        const indicator = document.getElementById('general-settings-autosave');
+        if (indicator) {
+            indicator.classList.add('d-none');
+        }
+    }
+
+    function showSavingIndicator() {
+        const saving = document.getElementById('general-settings-autosave');
+        const saved = document.getElementById('general-settings-saved');
+
+        if (saving) saving.classList.remove('d-none');
+        if (saved) saved.classList.add('d-none');
+    }
+
+    function hideSavingIndicator() {
+        const indicator = document.getElementById('general-settings-autosave');
+        if (indicator) {
+            indicator.classList.add('d-none');
+        }
+    }
+
+    function showSavedIndicator() {
+        const saved = document.getElementById('general-settings-saved');
+        if (saved) {
+            saved.classList.remove('d-none');
+        }
+    }
+
+    function hideSavedIndicator() {
+        const saved = document.getElementById('general-settings-saved');
+        if (saved) {
+            saved.classList.add('d-none');
+        }
+    }
+
+    function showSaveError(message) {
+        // Показываем уведомление об ошибке
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <i class="fa fa-exclamation-triangle"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Инициализируем auto-save при активации вкладки общих настроек
+    const generalTab = document.getElementById('general-settings-tab');
+    if (generalTab) {
+        generalTab.addEventListener('shown.bs.tab', function() {
+            window.location.hash = '#general-settings';
+            setTimeout(initGeneralSettingsAutoSave, 100);
+        });
+    }
+
+    // Инициализируем при загрузке страницы, если вкладка активна
+    if (window.location.hash === '#general-settings' || (!window.location.hash && document.querySelector('#general-settings-tab.active'))) {
+        setTimeout(initGeneralSettingsAutoSave, 100);
+    }
+});
+
+// Auto-save для настроек полей инвентаря
+document.addEventListener('DOMContentLoaded', function() {
+    let fieldsAutoSaveTimer;
+    let fieldsHasUnsavedChanges = false;
+    let fieldsOriginalData = {};
+
+    // Функция инициализации auto-save для вкладки полей
+    function initFieldsAutoSave() {
+        if (window.fieldsAutoSaveInitialized) {
+            return;
+        }
+        window.fieldsAutoSaveInitialized = true;
+
+        // Получаем форму полей
+        const form = document.querySelector('#fields form');
+        if (!form) return;
+
+        // Сохраняем оригинальные значения
+        saveFieldsOriginalData(form);
+
+        // Отслеживаем изменения
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                fieldsHasUnsavedChanges = true;
+                scheduleFieldsAutoSave();
+            });
+
+            input.addEventListener('change', function() {
+                fieldsHasUnsavedChanges = true;
+                scheduleFieldsAutoSave();
+            });
+        });
+
+        console.log('Fields auto-save initialized');
+    }
+
+    function saveFieldsOriginalData(form) {
+        const inputs = form.querySelectorAll('input, select');
+        fieldsOriginalData = {};
+
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                fieldsOriginalData[input.name] = input.checked;
+            } else {
+                fieldsOriginalData[input.name] = input.value;
+            }
+        });
+    }
+
+    function hasFieldsDataChanged(form) {
+        const inputs = form.querySelectorAll('input, select');
+
+        for (let input of inputs) {
+            let currentValue;
+            if (input.type === 'checkbox') {
+                currentValue = input.checked;
+            } else {
+                currentValue = input.value;
+            }
+
+            if (currentValue !== fieldsOriginalData[input.name]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function scheduleFieldsAutoSave() {
+        clearTimeout(fieldsAutoSaveTimer);
+
+        // Показываем индикатор изменений
+        showFieldsAutoSaveIndicator();
+
+        // Запускаем auto-save через 8 секунд
+        fieldsAutoSaveTimer = setTimeout(() => {
+            if (fieldsHasUnsavedChanges) {
+                performFieldsAutoSave();
+            }
+        }, 8000);
+    }
+
+    function performFieldsAutoSave() {
+        const form = document.querySelector('#fields form');
+        if (!form || !hasFieldsDataChanged(form)) {
+            fieldsHasUnsavedChanges = false;
+            hideFieldsAutoSaveIndicator();
+            return;
+        }
+
+        // Собираем данные формы
+        const formData = new FormData(form);
+        const data = {};
+
+        for (let [key, value] of formData.entries()) {
+            if (key === '_token') continue; // Пропускаем CSRF токен
+
+            // Для чекбоксов
+            if (form.querySelector(`[name="${key}"]`).type === 'checkbox') {
+                data[key] = form.querySelector(`[name="${key}"]`).checked;
+            } else {
+                data[key] = value;
+            }
+        }
+
+        // Добавляем версию для optimistic locking
+        data.version = window.inventoryVersion || {{ inventory.version }};
+
+        showFieldsSavingIndicator();
+
+        fetch(`{{ path('inventory_fields', {'id': inventory.id}) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => {
+            if (response.status === 409) {
+                // Optimistic locking conflict
+                return response.json().then(result => {
+                    throw new Error(result.error || '{{ 'inventory.concurrent_modification_error'|trans }}');
+                });
+            }
+            return response.json();
+        })
+        .then(result => {
+            hideFieldsSavingIndicator();
+
+            if (result.success) {
+                fieldsHasUnsavedChanges = false;
+                showFieldsSavedIndicator();
+                // Обновляем оригинальные данные
+                saveFieldsOriginalData(form);
+                // Обновляем версию
+                if (result.version) {
+                    window.inventoryVersion = result.version;
+                }
+
+                setTimeout(() => {
+                    hideFieldsSavedIndicator();
+                }, 3000);
+            } else {
+                console.error('Fields auto-save failed:', result.error);
+                showFieldsSaveError(result.error || '{{ 'js.fields.save_error'|trans }}');
+            }
+        })
+        .catch(error => {
+            hideFieldsSavingIndicator();
+            console.error('Fields auto-save error:', error);
+            showFieldsSaveError('{{ 'js.fields.network_error'|trans }}');
+        });
+    }
+
+    function showFieldsAutoSaveIndicator() {
+        const indicator = document.getElementById('fields-autosave');
+        if (indicator) {
+            indicator.classList.remove('d-none');
+        }
+    }
+
+    function hideFieldsAutoSaveIndicator() {
+        const indicator = document.getElementById('fields-autosave');
+        if (indicator) {
+            indicator.classList.add('d-none');
+        }
+    }
+
+    function showFieldsSavingIndicator() {
+        const saving = document.getElementById('fields-autosave');
+        const saved = document.getElementById('fields-saved');
+
+        if (saving) saving.classList.remove('d-none');
+        if (saved) saved.classList.add('d-none');
+    }
+
+    function hideFieldsSavingIndicator() {
+        const indicator = document.getElementById('fields-autosave');
+        if (indicator) {
+            indicator.classList.add('d-none');
+        }
+    }
+
+    function showFieldsSavedIndicator() {
+        const saved = document.getElementById('fields-saved');
+        if (saved) {
+            saved.classList.remove('d-none');
+        }
+    }
+
+    function hideFieldsSavedIndicator() {
+        const saved = document.getElementById('fields-saved');
+        if (saved) {
+            saved.classList.add('d-none');
+        }
+    }
+
+    function showFieldsSaveError(message) {
+        // Показываем уведомление об ошибке
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <i class="fa fa-exclamation-triangle"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Инициализируем auto-save при активации вкладки полей
+    const fieldsTab = document.getElementById('fields-tab');
+    if (fieldsTab) {
+        fieldsTab.addEventListener('shown.bs.tab', function() {
+            window.location.hash = '#fields';
+            setTimeout(initFieldsAutoSave, 100);
+        });
+    }
+
+    // Инициализируем при загрузке страницы, если вкладка активна
+    if (window.location.hash === '#fields' || (!window.location.hash && document.querySelector('#fields-tab.active'))) {
+        setTimeout(initFieldsAutoSave, 100);
+    }
+});
+
+// Статистика инвентаря
+document.addEventListener('DOMContentLoaded', function() {
+    // Функция инициализации статистики
+    function initStatistics() {
+        if (window.statisticsInitialized) {
+            return;
+        }
+        window.statisticsInitialized = true;
+
+        loadStatistics();
+
+        // Обработчик кнопки обновления
+        const refreshBtn = document.getElementById('refresh-statistics');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                loadStatistics();
+            });
+        }
+    }
+
+    function loadStatistics() {
+        // Показываем загрузку
+        showLoadingState();
+
+        fetch(`{{ path('inventory_api_statistics', {'id': inventory.id}) }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                displayStatistics(data);
+            })
+            .catch(error => {
+                console.error('Error loading statistics:', error);
+                showError('{{ 'statistics.error_loading'|trans }}');
+            });
+    }
+
+    function showLoadingState() {
+        document.getElementById('total-items-count').textContent = '-';
+        document.getElementById('active-fields-count').textContent = '-';
+        document.getElementById('numeric-fields-count').textContent = '-';
+        document.getElementById('text-fields-count').textContent = '-';
+        document.getElementById('created-date-range').textContent = '{{ 'statistics.loading'|trans }}';
+        document.getElementById('updated-date-range').textContent = '{{ 'statistics.loading'|trans }}';
+        document.getElementById('numeric-fields-content').textContent = '{{ 'statistics.loading'|trans }}';
+        document.getElementById('text-fields-content').textContent = '{{ 'statistics.loading'|trans }}';
+    }
+
+    function displayStatistics(data) {
+        // Основная статистика
+        document.getElementById('total-items-count').textContent = data.total_items || 0;
+
+        // Подсчитываем активные поля
+        const numericFieldsCount = Object.keys(data.numeric_fields || {}).length;
+        const textFieldsCount = Object.keys(data.text_fields || {}).length;
+        const activeFieldsCount = numericFieldsCount + textFieldsCount;
+
+        document.getElementById('active-fields-count').textContent = activeFieldsCount;
+        document.getElementById('numeric-fields-count').textContent = numericFieldsCount;
+        document.getElementById('text-fields-count').textContent = textFieldsCount;
+
+        // Диапазоны дат
+        document.getElementById('created-date-range').innerHTML = formatDateRange(data.created_date_range);
+        document.getElementById('updated-date-range').innerHTML = formatDateRange(data.updated_date_range);
+
+        // Статистика числовых полей
+        document.getElementById('numeric-fields-content').innerHTML = formatNumericFieldsStats(data.numeric_fields);
+
+        // Статистика текстовых полей
+        document.getElementById('text-fields-content').innerHTML = formatTextFieldsStats(data.text_fields);
+    }
+
+    function formatDateRange(dateRange) {
+        if (!dateRange || !dateRange.min || !dateRange.max) {
+            return '<em class="text-muted">{{ 'statistics.no_data'|trans }}</em>';
+        }
+
+        try {
+            // Даты приходят как строки в формате 'Y-m-d H:i:s'
+            const minDate = new Date(dateRange.min).toLocaleDateString('ru-RU');
+            const maxDate = new Date(dateRange.max).toLocaleDateString('ru-RU');
+
+            if (minDate === maxDate) {
+                return minDate;
+            }
+
+            return `{{ 'statistics.date_range'|trans({'%min%': '${minDate}', '%max%': '${maxDate}'}) }}`;
+        } catch (error) {
+            console.error('{{ 'statistics.error_format_date_range'|trans }}', error);
+            return '<em class="text-muted">{{'statistics.error_format_date_range'|trans}}</em>';
+        }
+    }
+
+    function formatNumericFieldsStats(numericFields) {
+        if (!numericFields || Object.keys(numericFields).length === 0) {
+            return '<em class="text-muted">{{'statistics.no_numeric_fields'|trans}}</em>';
+        }
+
+        let html = '<div class="row">';
+
+        Object.entries(numericFields).forEach(([fieldKey, stats]) => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">${escapeHtml(stats.name)}</h6>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <strong>${stats.count}</strong><br>
+                                    <small class="text-muted">{{'statistics.values'|trans}}</small>
+                                </div>
+                                <div class="col-6">
+                                    <strong>${stats.average.toFixed(1)}</strong><br>
+                                    <small class="text-muted">{{'statistics.average'|trans}}</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <strong>${stats.min}</strong><br>
+                                    <small class="text-muted">{{'statistics.min'|trans}}</small>
+                                </div>
+                                <div class="col-4">
+                                    <strong>${stats.max}</strong><br>
+                                    <small class="text-muted">{{'statistics.max'|trans}}</small>
+                                </div>
+                                <div class="col-4">
+                                    <strong>${stats.sum}</strong><br>
+                                    <small class="text-muted">{{'statistics.sum'|trans}}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    function formatTextFieldsStats(textFields) {
+        if (!textFields || Object.keys(textFields).length === 0) {
+            return '<em class="text-muted">{{'statistics.no_text_fields'|trans}}</em>';
+        }
+
+        let html = '<div class="row">';
+
+        Object.entries(textFields).forEach(([fieldKey, stats]) => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">${escapeHtml(stats.name)}</h6>
+                            <div class="row text-center mb-2">
+                                <div class="col-6">
+                                    <strong>${stats.total_values}</strong><br>
+                                    <small class="text-muted">{{'statistics.total_values'|trans}}</small>
+                                </div>
+                                <div class="col-6">
+                                    <strong>${stats.unique_values}</strong><br>
+                                    <small class="text-muted">{{'statistics.unique_values'|trans}}</small>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>{{'statistics.most_frequent'|trans}}</strong>
+                                <ul class="list-unstyled mt-2">
+            `;
+
+            if (stats.most_frequent && Object.keys(stats.most_frequent).length > 0) {
+                Object.entries(stats.most_frequent).slice(0, 3).forEach(([value, count]) => {
+                    const percentage = ((count / stats.total_values) * 100).toFixed(1);
+                    // Экранируем HTML для защиты от XSS
+                    const escapedValue = escapeHtml(value);
+                    html += `<li><code>${escapedValue}</code> - ${count} {{ 'inventory.stats_times'|trans }} (${percentage}%)</li>`;
+                });
+            } else {
+                html += '<li><em class="text-muted">{{'statistics.no_data'|trans}}</em></li>';
+            }
+
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    function showError(message) {
+        const errorHtml = `<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ${message}</div>`;
+
+        document.getElementById('created-date-range').innerHTML = errorHtml;
+        document.getElementById('updated-date-range').innerHTML = errorHtml;
+        document.getElementById('numeric-fields-content').innerHTML = errorHtml;
+        document.getElementById('text-fields-content').innerHTML = errorHtml;
+    }
+
+    // Инициализируем статистику при активации вкладки
+    const statisticsTab = document.getElementById('statistics-tab');
+    if (statisticsTab) {
+        statisticsTab.addEventListener('shown.bs.tab', function() {
+            window.location.hash = '#statistics';
+            setTimeout(initStatistics, 100);
+        });
+    }
+
+    // Инициализируем при загрузке страницы, если вкладка активна
+    if (window.location.hash === '#statistics' || (!window.location.hash && document.querySelector('#statistics-tab.active'))) {
+        setTimeout(initStatistics, 100);
+    }
+});
+
+// === JAVASCRIPT ДЛЯ УПРАВЛЕНИЯ ЭЛЕМЕНТАМИ ===
+
+// Глобальные переменные для элементов
+let currentItemsPage = 1;
+let currentSort = 'created_at';
+let currentDirection = 'desc';
+let currentSearch = '';
+let currentLimit = 25;
+let currentFilters = {};
+let selectedItems = new Set();
+let itemsData = [];
+let hasEditPermission = {{ app.user and (inventory.creator == app.user or is_granted('ROLE_ADMIN') or inventory.isPublic or inventory.accesses|filter(access => access.user == app.user)|length > 0) ? 'true' : 'false' }};
+let isLoggedIn = {{ app.user ? 'true' : 'false' }};
+
+// Инициализация вкладки элементов
+function initItemsTab() {
+    if (itemsTabInitialized) return;
+    itemsTabInitialized = true;
+
+    // Сбрасываем выбранные элементы при инициализации вкладки
+    selectedItems.clear();
+
+    // Гарантируем, что toolbar скрыт при инициализации
+    updateSelectedCount();
+
+    if (document.getElementById('items-tab').classList.contains('active')) {
+        loadItems();
+    }
+}
+
+// Загрузка элементов через AJAX
+function loadItems(page = 1, sort = currentSort, direction = currentDirection, search = currentSearch, filters = currentFilters, limit = currentLimit) {
+    currentItemsPage = page;
+    currentSort = sort;
+    currentDirection = direction;
+    currentSearch = search;
+    currentFilters = filters;
+    currentLimit = limit;
+
+    // Сбрасываем выбранные элементы при изменении фильтров, поиска или сортировки
+    // но сохраняем при пагинации
+    const isPaginationOnly = arguments.length === 1 && typeof page === 'number';
+    if (!isPaginationOnly) {
+        selectedItems.clear();
+    }
+
+    // Если это первая загрузка (не пагинация), всегда сбрасываем selectedItems
+    if (page === 1 && !isPaginationOnly) {
+        selectedItems.clear();
+    }
+
+    const loading = document.getElementById('itemsLoading');
+    const empty = document.getElementById('itemsEmpty');
+    const tableBody = document.getElementById('itemsTableBody');
+    const pagination = document.getElementById('itemsPagination');
+
+    loading.style.display = 'block';
+    empty.style.display = 'none';
+    tableBody.innerHTML = '';
+    pagination.style.display = 'none';
+
+    // Build URL with all parameters
+    let url = `{{ path('item_api_list', {'inventoryId': inventory.id}) }}?page=${page}&sort=${sort}&order=${direction}&limit=${limit}&search=${encodeURIComponent(search)}`;
+
+    // Add filters to URL
+    Object.keys(filters).forEach(key => {
+        if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+            url += `&${key}=${encodeURIComponent(filters[key])}`;
+        }
+    });
+
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        loading.style.display = 'none';
+
+        if (data.items && data.items.length > 0) {
+            itemsData = data.items;
+            renderItemsTable(data.items);
+            renderPagination(data.pagination);
+            pagination.style.display = 'block';
+        } else {
+            empty.style.display = 'block';
+        }
+
+        updateSelectedCount();
+    })
+    .catch(error => {
+        console.error('Error loading items:', error);
+        loading.style.display = 'none';
+        tableBody.innerHTML = '<tr><td colspan="100%" class="text-center text-danger">{{ 'js.items.load_error'|trans }}</td></tr>';
+    });
+}
+
+// Отрисовка таблицы элементов
+function renderItemsTable(items) {
+    const tableBody = document.getElementById('itemsTableBody');
+    tableBody.innerHTML = '';
+
+    items.forEach(item => {
+        const row = document.createElement('tr');
+
+        // Чекбокс для выбора (только для пользователей с правами)
+        {% if app.user and (inventory.creator == app.user or is_granted('ROLE_ADMIN') or inventory.isPublic or inventory.accesses|filter(access => access.user == app.user)|length > 0) %}
+        const checkboxCell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input item-checkbox';
+        checkbox.value = item.id;
+        checkbox.checked = selectedItems.has(item.id);
+        checkbox.addEventListener('change', handleItemSelection);
+        checkboxCell.appendChild(checkbox);
+        row.appendChild(checkboxCell);
+        {% endif %}
+
+        // Custom ID
+        const customIdCell = document.createElement('td');
+        customIdCell.innerHTML = `<code>${escapeHtml(item.custom_id)}</code>`;
+        row.appendChild(customIdCell);
+
+        // Дата создания
+        const createdCell = document.createElement('td');
+        createdCell.textContent = new Date(item.created_at).toLocaleString('ru-RU');
+        row.appendChild(createdCell);
+
+        // Кто создал
+        const creatorCell = document.createElement('td');
+        creatorCell.textContent = item.created_by.username || item.created_by.email;
+        row.appendChild(creatorCell);
+
+        // Кастомные поля
+        {% for i in 1..3 %}
+            {% if attribute(inventory, 'customString' ~ i ~ 'State') and attribute(inventory, 'customString' ~ i ~ 'ShowInTable') %}
+                const customString{{ i }}Cell = document.createElement('td');
+                customString{{ i }}Cell.textContent = item.custom_string{{ i }}_value || '';
+                row.appendChild(customString{{ i }}Cell);
+            {% endif %}
+            {% if attribute(inventory, 'customText' ~ i ~ 'State') and attribute(inventory, 'customText' ~ i ~ 'ShowInTable') %}
+                const customText{{ i }}Cell = document.createElement('td');
+                const text = item.custom_text{{ i }}_value || '';
+                const displayText = text.length > 50 ? text.substring(0, 50) + '...' : text;
+                customText{{ i }}Cell.textContent = displayText;
+                customText{{ i }}Cell.title = text;
+                row.appendChild(customText{{ i }}Cell);
+            {% endif %}
+            {% if attribute(inventory, 'customInt' ~ i ~ 'State') and attribute(inventory, 'customInt' ~ i ~ 'ShowInTable') %}
+                const customInt{{ i }}Cell = document.createElement('td');
+                customInt{{ i }}Cell.textContent = item.custom_int{{ i }}_value !== null ? item.custom_int{{ i }}_value : '';
+                row.appendChild(customInt{{ i }}Cell);
+            {% endif %}
+            {% if attribute(inventory, 'customBool' ~ i ~ 'State') and attribute(inventory, 'customBool' ~ i ~ 'ShowInTable') %}
+                const customBool{{ i }}Cell = document.createElement('td');
+                customBool{{ i }}Cell.innerHTML = item.custom_bool{{ i }}_value ? '<i class="bi bi-check-circle text-success"></i>' : '<i class="bi bi-x-circle text-muted"></i>';
+                row.appendChild(customBool{{ i }}Cell);
+            {% endif %}
+            {% if attribute(inventory, 'customLink' ~ i ~ 'State') and attribute(inventory, 'customLink' ~ i ~ 'ShowInTable') %}
+                const customLink{{ i }}Cell = document.createElement('td');
+                const link = item.custom_link{{ i }}_value;
+                if (link) {
+                    customLink{{ i }}Cell.innerHTML = `<a href="${link}" target="_blank" rel="noopener noreferrer"><i class="bi bi-link-45deg"></i></a>`;
+                }
+                row.appendChild(customLink{{ i }}Cell);
+            {% endif %}
+        {% endfor %}
+
+        // Лайки
+        const likesCell = document.createElement('td');
+        if (isLoggedIn) {
+            const likeBtn = document.createElement('button');
+            likeBtn.type = 'button';
+            likeBtn.className = `btn btn-sm ${item.liked ? 'btn-danger' : 'btn-outline-danger'} like-btn`;
+            likeBtn.dataset.itemId = item.id;
+            likeBtn.dataset.liked = item.liked || false;
+            likeBtn.innerHTML = `<i class="bi bi-heart${item.liked ? '-fill' : ''}"></i> <span class="likes-count">${item.likes_count}</span>`;
+            likeBtn.addEventListener('click', handleLike);
+            likesCell.appendChild(likeBtn);
+        } else {
+            likesCell.innerHTML = `<span class="text-muted">${item.likes_count}</span>`;
+        }
+        row.appendChild(likesCell);
+
+        // Обработчик двойного клика для редактирования элемента
+        {% if app.user and (inventory.creator == app.user or is_granted('ROLE_ADMIN') or inventory.isPublic or inventory.accesses|filter(access => access.user == app.user)|length > 0) %}
+        row.addEventListener('dblclick', function() {
+            window.location.href = `/inventories/{{ inventory.id }}/items/${item.id}/edit`;
+        });
+        row.style.cursor = 'pointer';
+        {% endif %}
+
+        tableBody.appendChild(row);
+    });
+}
+
+// Отрисовка пагинации
+function renderPagination(pagination) {
+    const paginationControls = document.getElementById('paginationControls');
+    paginationControls.innerHTML = '';
+
+    if (pagination.pages <= 1) return;
+
+    // Кнопка "Предыдущая"
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${pagination.page <= 1 ? 'disabled' : ''}`;
+    const prevLink = document.createElement('a');
+    prevLink.className = 'page-link';
+    prevLink.href = '#';
+    prevLink.textContent = '{{ 'js.pagination.previous'|trans }}';
+    if (pagination.page > 1) {
+        prevLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadItems(pagination.page - 1);
+        });
+    }
+    prevLi.appendChild(prevLink);
+    paginationControls.appendChild(prevLi);
+
+    // Определяем диапазон страниц для отображения
+    let startPage = Math.max(1, pagination.page - 2);
+    let endPage = Math.min(pagination.pages, pagination.page + 2);
+
+    // Страница 1
+    if (startPage > 1) {
+        const firstLi = document.createElement('li');
+        firstLi.className = 'page-item';
+        const firstLink = document.createElement('a');
+        firstLink.className = 'page-link';
+        firstLink.href = '#';
+        firstLink.textContent = '1';
+        firstLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadItems(1);
+        });
+        firstLi.appendChild(firstLink);
+        paginationControls.appendChild(firstLi);
+
+        if (startPage > 2) {
+            const ellipsis = document.createElement('li');
+            ellipsis.className = 'page-item disabled';
+            ellipsis.innerHTML = '<span class="page-link">...</span>';
+            paginationControls.appendChild(ellipsis);
+        }
+    }
+
+    // Основные страницы
+    for (let i = startPage; i <= endPage; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === pagination.page ? 'active' : ''}`;
+        const link = document.createElement('a');
+        link.className = 'page-link';
+        link.href = '#';
+        link.textContent = i;
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadItems(i);
+        });
+        li.appendChild(link);
+        paginationControls.appendChild(li);
+    }
+
+    // Последняя страница
+    if (endPage < pagination.pages) {
+        if (endPage < pagination.pages - 1) {
+            const ellipsis = document.createElement('li');
+            ellipsis.className = 'page-item disabled';
+            ellipsis.innerHTML = '<span class="page-link">...</span>';
+            paginationControls.appendChild(ellipsis);
+        }
+
+        const lastLi = document.createElement('li');
+        lastLi.className = 'page-item';
+        const lastLink = document.createElement('a');
+        lastLink.className = 'page-link';
+        lastLink.href = '#';
+        lastLink.textContent = pagination.pages;
+        lastLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadItems(pagination.pages);
+        });
+        lastLi.appendChild(lastLink);
+        paginationControls.appendChild(lastLi);
+    }
+
+    // Кнопка "Следующая"
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${pagination.page >= pagination.pages ? 'disabled' : ''}`;
+    const nextLink = document.createElement('a');
+    nextLink.className = 'page-link';
+    nextLink.href = '#';
+    nextLink.textContent = '{{ 'js.pagination.next'|trans }}';
+    if (pagination.page < pagination.pages) {
+        nextLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadItems(pagination.page + 1);
+        });
+    }
+    nextLi.appendChild(nextLink);
+    paginationControls.appendChild(nextLi);
+}
+
+// Обработка выбора элементов
+function handleItemSelection(event) {
+    const checkbox = event.target;
+    const itemId = parseInt(checkbox.value);
+
+    if (checkbox.checked) {
+        selectedItems.add(itemId);
+    } else {
+        selectedItems.delete(itemId);
+    }
+
+    updateSelectedCount();
+    updateSelectAllCheckbox();
+}
+
+// Обновление счетчика выбранных элементов
+function updateSelectedCount() {
+    const count = selectedItems.size;
+    const toolbar = document.getElementById('itemsToolbar');
+    const selectedCount = document.getElementById('selectedCount');
+    const editSelectedBtn = document.getElementById('editSelectedBtn');
+    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+
+    // Если toolbar не существует (пользователь без прав), ничего не делаем
+    if (!toolbar || !selectedCount) return;
+
+    if (count > 0) {
+        toolbar.classList.remove('d-none');
+        selectedCount.textContent = '{{ 'js.items.selected_count'|trans({'%count%': 'count'}) }}'.replace('count', count);
+
+        // Показываем кнопку редактирования только если выбран один элемент
+        if (editSelectedBtn) {
+            if (count === 1) {
+                editSelectedBtn.classList.remove('d-none');
+            } else {
+                editSelectedBtn.classList.add('d-none');
+            }
+        }
+
+        // Показываем кнопку удаления всегда когда есть выбранные элементы
+        if (batchDeleteBtn) {
+            batchDeleteBtn.classList.remove('d-none');
+        }
+    } else {
+        toolbar.classList.add('d-none');
+        // Сбрасываем счетчик при скрытии toolbar
+        selectedCount.textContent = '{{ 'js.items.selected_count'|trans({'%count%': 0}) }}'.replace('0', '0');
+
+        // Также скрываем кнопки индивидуально на всякий случай
+        if (editSelectedBtn) {
+            editSelectedBtn.classList.add('d-none');
+        }
+        if (batchDeleteBtn) {
+            batchDeleteBtn.classList.add('d-none');
+        }
+    }
+}
+
+// Обновление чекбокса "Выбрать все"
+function updateSelectAllCheckbox() {
+    const selectAll = document.getElementById('selectAllItems');
+    if (!selectAll) return; // Если чекбокс скрыт, ничего не делаем
+
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+
+    if (checkboxes.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+    }
+
+    const checkedBoxes = document.querySelectorAll('.item-checkbox:checked');
+    selectAll.checked = checkedBoxes.length === checkboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+}
+
+// Обработка клика "Выбрать все"
+function handleSelectAll(event) {
+    const selectAll = event.target;
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+        const itemId = parseInt(checkbox.value);
+
+        if (selectAll.checked) {
+            selectedItems.add(itemId);
+        } else {
+            selectedItems.delete(itemId);
+        }
+    });
+
+    updateSelectedCount();
+}
+
+// Обработка сортировки
+function handleSort(event) {
+    event.preventDefault();
+
+    const link = event.currentTarget;
+    const sortField = link.dataset.sort;
+
+    // Определяем новое направление сортировки
+    let newDirection = 'asc';
+    if (currentSort === sortField && currentDirection === 'asc') {
+        newDirection = 'desc';
+    }
+
+    // Обновляем иконки сортировки
+    document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.className = 'bi bi-chevron-expand sort-icon';
+    });
+
+    const icon = link.querySelector('.sort-icon');
+    icon.className = newDirection === 'asc' ? 'bi bi-chevron-up sort-icon' : 'bi bi-chevron-down sort-icon';
+
+    loadItems(1, sortField, newDirection);
+}
+
+// Массовое удаление
+// Обработка лайков
+function handleLike(event) {
+    const btn = event.currentTarget;
+    const itemId = btn.dataset.itemId;
+    if (!itemId || itemId == '0') return;
+
+    const url = `/inventories/{{ inventory.id }}/items/api/${itemId}/like`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const icon = btn.querySelector('i');
+            const countSpan = btn.querySelector('.likes-count');
+
+            if (data.liked) {
+                icon.className = 'bi bi-heart-fill';
+                btn.className = 'btn btn-sm btn-danger like-btn';
+            } else {
+                icon.className = 'bi bi-heart';
+                btn.className = 'btn btn-sm btn-outline-danger like-btn';
+            }
+
+            countSpan.textContent = data.likes_count;
+            btn.dataset.liked = data.liked;
+        } else {
+            showNotification('{{ 'ajax.error_like_update'|trans({'%error%': 'data.error || ajax.unknown_error'}) }}'.replace('data.error || ajax.unknown_error', (data.error || '{{ 'ajax.unknown_error'|trans }}')));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('{{ 'ajax.error_like'|trans }}');
+    });
+}
+
+// Обработчик редактирования выбранного элемента
+function handleEditSelected() {
+    if (selectedItems.size === 0) {
+        showNotification('{{ 'inventory.select_item_to_edit'|trans }}');
+        return;
+    }
+
+    if (selectedItems.size > 1) {
+        showNotification('{{ 'inventory.select_only_one_item'|trans }}');
+        return;
+    }
+
+    const itemId = Array.from(selectedItems)[0];
+    window.location.href = `/inventories/{{ inventory.id }}/items/${itemId}/edit`;
+}
+
+function handleBatchDelete() {
+    if (selectedItems.size === 0) return;
+
+    const message = '{{ 'inventory.confirm_delete_items'|trans({'%count%': 'selectedItems.size'}) }}'.replace('selectedItems.size', selectedItems.size);
+    showConfirmationModal(message, function(confirmed) {
+        if (!confirmed) {
+            return;
+        }
+
+    const url = `{{ path('item_api_batch_delete', {'inventoryId': inventory.id}) }}`;
+    const data = {
+        item_ids: Array.from(selectedItems)
+    };
+
+    fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            selectedItems.clear();
+            loadItems(currentItemsPage);
+            showNotification('{{ 'inventory.items_deleted'|trans({'%count%': 'data.deleted_count'}) }}'.replace('data.deleted_count', data.deleted_count));
+        } else {
+            showNotification('{{ 'ajax.error_delete'|trans({'%error%': 'data.error || ajax.unknown_error'}) }}'.replace('data.error || ajax.unknown_error', (data.error || '{{ 'ajax.unknown_error'|trans }}')));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('{{ 'inventory.error_delete_items'|trans }}');
+    });
+    });
+}
+
+// Инициализация обработчиков событий
+document.addEventListener('DOMContentLoaded', function() {
+    // Принудительно скрываем toolbar при загрузке страницы
+    const toolbar = document.getElementById('itemsToolbar');
+    if (toolbar) {
+        toolbar.classList.add('d-none');
+    }
+
+    // Гарантируем начальное скрытое состояние toolbar
+    updateSelectedCount();
+
+    // Инициализация вкладки элементов
+    const itemsTab = document.getElementById('items-tab');
+    if (itemsTab) {
+        itemsTab.addEventListener('shown.bs.tab', function() {
+            window.location.hash = '#items';
+            initItemsTab();
+        });
+    }
+
+    // Автоматическая активация вкладки Items если URL содержит #items
+    if (window.location.hash === '#items') {
+        const itemsTabTrigger = document.getElementById('items-tab');
+        if (itemsTabTrigger) {
+            const tab = new bootstrap.Tab(itemsTabTrigger);
+            tab.show();
+        }
+    }
+
+    // Автоматическая активация вкладки General Settings если URL содержит #general-settings
+    if (window.location.hash === '#general-settings') {
+        const generalSettingsTabTrigger = document.getElementById('general-settings-tab');
+        if (generalSettingsTabTrigger) {
+            const tab = new bootstrap.Tab(generalSettingsTabTrigger);
+            tab.show();
+        }
+    }
+
+    // Обработчики для чекбоксов (только если чекбокс существует)
+    const selectAllCheckbox = document.getElementById('selectAllItems');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', handleSelectAll);
+    }
+
+    // Обработчики для сортировки
+    document.querySelectorAll('.sort-link').forEach(link => {
+        link.addEventListener('click', handleSort);
+    });
+
+    // Обработчик редактирования выбранного элемента (только если кнопка существует)
+    const editSelectedBtn = document.getElementById('editSelectedBtn');
+    if (editSelectedBtn) {
+        editSelectedBtn.addEventListener('click', handleEditSelected);
+    }
+
+    // Обработчик массового удаления (только если кнопка существует)
+    const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+    if (batchDeleteBtn) {
+        batchDeleteBtn.addEventListener('click', handleBatchDelete);
+    }
+
+    // Инициализация если вкладка уже активна
+    if (document.querySelector('#items-tab.active')) {
+        setTimeout(initItemsTab, 100);
+    }
+
+    // Обработчик для вкладки Discussion
+    const discussionTab = document.getElementById('discussion-tab');
+    if (discussionTab) {
+        discussionTab.addEventListener('shown.bs.tab', function() {
+            window.location.hash = '#discussion';
+            initDiscussionTab();
+        });
+
+        // Сброс инициализации при уходе с вкладки Discussion
+        discussionTab.addEventListener('hidden.bs.tab', function() {
+            discussionTabInitialized = false;
+            // НЕ сбрасываем commentsDeleteHandlerInitialized,
+            // так как обработчик остается attached к document
+            if (commentsPollingInterval) {
+                clearInterval(commentsPollingInterval);
+                commentsPollingInterval = null;
+            }
+        });
+    }
+
+    // Сброс инициализации при уходе с вкладки Items
+    const itemsTabElement = document.getElementById('items-tab');
+    if (itemsTabElement) {
+        itemsTabElement.addEventListener('hidden.bs.tab', function() {
+            itemsTabInitialized = false;
+        });
+    }
+
+    // Сброс инициализации при уходе с вкладки Access
+    const accessTab = document.getElementById('access-settings-tab');
+    if (accessTab) {
+        accessTab.addEventListener('hidden.bs.tab', function() {
+            window.accessManagementInitialized = false;
+        });
+    }
+
+    // Сброс инициализации при уходе с вкладки General Settings
+    const generalSettingsTab = document.getElementById('general-settings-tab');
+    if (generalSettingsTab) {
+        generalSettingsTab.addEventListener('hidden.bs.tab', function() {
+            window.generalSettingsAutoSaveInitialized = false;
+        });
+    }
+
+    // Сброс инициализации при уходе с вкладки Fields
+    const fieldsTab = document.getElementById('fields-tab');
+    if (fieldsTab) {
+        fieldsTab.addEventListener('hidden.bs.tab', function() {
+            window.fieldsAutoSaveInitialized = false;
+        });
+    }
+
+    // Сброс инициализации при уходе с вкладки Statistics
+    const statisticsTab = document.getElementById('statistics-tab');
+    if (statisticsTab) {
+        statisticsTab.addEventListener('hidden.bs.tab', function() {
+            window.statisticsInitialized = false;
+        });
+    }
+
+    // Сброс инициализации при уходе с вкладки Custom IDs
+    const customIdsTab = document.getElementById('custom-ids-tab');
+    if (customIdsTab) {
+        customIdsTab.addEventListener('hidden.bs.tab', function() {
+            customIdsInitialized = false;
+        });
+    }
+
+    // Обработчик изменения hash в URL для активации вкладок
+    function handleHashChange() {
+        const hash = window.location.hash;
+        let tabTrigger = null;
+
+        switch (hash) {
+            case '#items':
+                tabTrigger = document.getElementById('items-tab');
+                break;
+            case '#discussion':
+                tabTrigger = document.getElementById('discussion-tab');
+                break;
+            case '#general-settings':
+                tabTrigger = document.getElementById('general-settings-tab');
+                break;
+            case '#custom-ids':
+                tabTrigger = document.getElementById('custom-ids-tab');
+                break;
+            case '#access-settings':
+                tabTrigger = document.getElementById('access-settings-tab');
+                break;
+            case '#fields':
+                tabTrigger = document.getElementById('fields-tab');
+                break;
+            case '#statistics':
+                tabTrigger = document.getElementById('statistics-tab');
+                break;
+        }
+
+        if (tabTrigger && !tabTrigger.classList.contains('active')) {
+            const tab = new bootstrap.Tab(tabTrigger);
+            tab.show();
+        }
+    }
+
+    // Добавляем обработчик изменения hash
+    window.addEventListener('hashchange', handleHashChange);
+});
+
+// === ФУНКЦИИ ДЛЯ ОБСУЖДЕНИЙ ===
+
+let lastCommentId = 0;
+let commentsPollingInterval = null;
+let discussionTabInitialized = false;
+let commentsDeleteHandlerInitialized = false;
+
+// === ФУНКЦИИ ДЛЯ ЭЛЕМЕНТОВ ===
+
+let itemsTabInitialized = false;
+
+function initDiscussionTab() {
+    if (discussionTabInitialized) return;
+    discussionTabInitialized = true;
+
+    loadComments();
+    setupCommentForm();
+    startCommentsPolling();
+}
+
+function loadComments() {
+    const container = document.getElementById('comments-container');
+    const loading = document.getElementById('loading-comments');
+
+    if (!loading) return;
+
+    fetch(`/inventories/api/{{ inventory.id }}/comments`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            renderComments(data.comments);
+            updateCommentsCount(data.comments.length);
+        } else {
+            container.innerHTML = '<div class="alert alert-danger">{{ 'ajax.error_load_comments'|trans({'%error%': 'data.error || ajax.unknown_error'}) }}'.replace('data.error || ajax.unknown_error', (data.error || '{{ 'ajax.unknown_error'|trans }}')) + '</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading comments:', error);
+        container.innerHTML = '<div class="alert alert-danger">{{ 'js.comments.load_error'|trans }}</div>';
+    });
+}
+
+function renderComments(comments) {
+    const container = document.getElementById('comments-container');
+
+    if (comments.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-chat-square-text fs-1"></i><br>{{ 'js.comments.no_comments'|trans }}</div>';
+        lastCommentId = 0;
+        return;
+    }
+
+    let html = '';
+    comments.forEach(comment => {
+        html += renderComment(comment);
+        if (comment.id > lastCommentId) {
+            lastCommentId = comment.id;
+        }
+    });
+
+    container.innerHTML = html;
+}
+
+function renderComment(comment) {
+    const createdAt = new Date(comment.created_at);
+    const timeAgo = getTimeAgo(createdAt);
+
+    let deleteButton = '';
+    if (comment.can_delete) {
+        deleteButton = `<button class="btn btn-sm btn-outline-danger ms-2 delete-comment-btn" data-comment-id="${comment.id}" title="{{ 'comments.delete_title'|trans }}">
+            <i class="bi bi-trash"></i>
+        </button>`;
+    }
+
+    return `
+        <div class="comment-item mb-3 p-3 border rounded" data-comment-id="${comment.id}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center">
+                    <strong class="me-2">${escapeHtml(comment.user.display_name)}</strong>
+                    <small class="text-muted">${timeAgo}</small>
+                </div>
+                <div>
+                    ${deleteButton}
+                </div>
+            </div>
+            <div class="comment-content">${comment.content_html}</div>
+        </div>
+    `;
+}
+
+function setupCommentForm() {
+    const form = document.getElementById('comment-form');
+    if (!form) return;
+
+    // Проверяем, не добавлен ли уже submit обработчик к этой форме
+    if (form.dataset.submitHandlerAttached) return;
+    form.dataset.submitHandlerAttached = 'true';
+
+    // Обработчик удаления комментариев (только один раз за сессию)
+    if (!commentsDeleteHandlerInitialized) {
+        commentsDeleteHandlerInitialized = true;
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-comment-btn')) {
+                const btn = e.target.closest('.delete-comment-btn');
+                const commentId = btn.dataset.commentId;
+
+                showConfirmationModal('{{ 'inventory.confirm_delete_comment'|trans }}', function(confirmed) {
+                    if (confirmed) {
+                        deleteComment(commentId);
+                    }
+                });
+            }
+        });
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submit-comment');
+        const textarea = document.getElementById('comment-content');
+
+        const content = textarea.value.trim();
+        if (!content) {
+            showNotification('{{ 'inventory.comment_empty'|trans }}');
+            return;
+        }
+
+        // Отключаем кнопку отправки
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ 'js.comments.sending'|trans }}';
+
+        fetch(`/inventories/api/{{ inventory.id }}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                content: content,
+                _token: document.querySelector('[name="_token"]').value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Добавляем новый комментарий в начало списка
+                const container = document.getElementById('comments-container');
+                const commentHtml = renderComment(data.comment);
+
+                if (container.querySelector('.comment-item')) {
+                    container.insertAdjacentHTML('afterbegin', commentHtml);
+                } else {
+                    container.innerHTML = commentHtml;
+                }
+
+                // Очищаем форму
+                textarea.value = '';
+
+                // Обновляем счетчик
+                const countElement = document.getElementById('comments-count');
+                countElement.textContent = parseInt(countElement.textContent) + 1;
+
+                // Обновляем lastCommentId
+                if (data.comment.id > lastCommentId) {
+                    lastCommentId = data.comment.id;
+                }
+
+                // Показываем анимацию нового комментария
+                const newComment = container.querySelector('.comment-item:first-child');
+                newComment.classList.add('new-comment');
+                setTimeout(() => {
+                    newComment.classList.remove('new-comment');
+                }, 3000);
+
+                // Перематываем к новому комментарию
+                newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                showNotification('{{ 'inventory.error_add_comment'|trans({'%error%': 'data.error || ajax.unknown_error'}) }}'.replace('data.error || ajax.unknown_error', (data.error || '{{ 'ajax.unknown_error'|trans }}')));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('{{ 'inventory.error_send_comment'|trans }}');
+        })
+        .finally(() => {
+            // Включаем кнопку обратно
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa fa-paper-plane"></i> {{ 'js.comments.send'|trans }}';
+        });
+    });
+}
+
+function deleteComment(commentId) {
+    fetch(`/inventories/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Удаляем комментарий из DOM
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+                commentElement.remove();
+
+                // Обновляем счетчик
+                const countElement = document.getElementById('comments-count');
+                const currentCount = parseInt(countElement.textContent);
+                countElement.textContent = Math.max(0, currentCount - 1);
+            }
+        } else {
+            showNotification('{{ 'inventory.error_delete_comment'|trans({'%error%': 'data.error || ajax.unknown_error'}) }}'.replace('data.error || ajax.unknown_error', (data.error || '{{ 'ajax.unknown_error'|trans }}')));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('{{ 'inventory.error_remove_comment'|trans }}');
+    });
+}
+
+function startCommentsPolling() {
+    // Останавливаем предыдущий polling если есть
+    if (commentsPollingInterval) {
+        clearInterval(commentsPollingInterval);
+    }
+
+    // Запускаем polling каждые 5 секунд
+    commentsPollingInterval = setInterval(() => {
+        pollNewComments();
+    }, 5000);
+}
+
+function pollNewComments() {
+    // Проверяем только если вкладка активна
+    if (!document.querySelector('#discussion.active')) {
+        return;
+    }
+
+    fetch(`/inventories/api/{{ inventory.id }}/comments`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.comments.length > 0) {
+            // Ищем новые комментарии
+            const newComments = data.comments.filter(comment => comment.id > lastCommentId);
+
+            if (newComments.length > 0) {
+                const container = document.getElementById('comments-container');
+
+                // Добавляем новые комментарии в конец
+                newComments.forEach(comment => {
+                    const commentHtml = renderComment(comment);
+                    container.insertAdjacentHTML('beforeend', commentHtml);
+
+                    // Анимируем новый комментарий
+                    const newCommentElement = container.querySelector(`[data-comment-id="${comment.id}"]`);
+                    newCommentElement.classList.add('new-comment');
+                    setTimeout(() => {
+                        newCommentElement.classList.remove('new-comment');
+                    }, 3000);
+
+                    if (comment.id > lastCommentId) {
+                        lastCommentId = comment.id;
+                    }
+                });
+
+                // Обновляем счетчик
+                updateCommentsCount(data.comments.length);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error polling comments:', error);
+    });
+}
+
+function updateCommentsCount(count) {
+    const countElement = document.getElementById('comments-count');
+    if (countElement) {
+        countElement.textContent = count;
+    }
+}
+
+function getTimeAgo(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'только что';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} мин назад`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ч назад`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} д назад`;
+
+    return date.toLocaleDateString('ru-RU');
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// === ОБРАБОТЧИКИ ДЛЯ ПОИСКА И ФИЛЬТРОВ ЭЛЕМЕНТОВ ===
+
+// Обработчик кнопки "Применить"
+document.getElementById('applyFilters').addEventListener('click', function() {
+    applySearchFilters();
+});
+
+// Обработчик кнопки "Сбросить"
+document.getElementById('resetFilters').addEventListener('click', function() {
+    resetSearchFilters();
+});
+
+// Обработчик изменения количества элементов на странице
+document.getElementById('itemsPerPage').addEventListener('change', function() {
+    currentLimit = parseInt(this.value);
+    loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+});
+
+// Обработчик изменения сортировки
+document.getElementById('itemsSort').addEventListener('change', function() {
+    currentSort = this.value;
+    loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+});
+
+// Обработчик изменения порядка сортировки
+document.getElementById('itemsOrder').addEventListener('change', function() {
+    currentDirection = this.value;
+    loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+});
+
+// Обработчик ввода в поле поиска с debounce
+let searchTimeout;
+document.getElementById('itemsSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentSearch = this.value.trim();
+        loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+    }, 300);
+});
+
+// Обработчики для фильтров с debounce
+document.querySelectorAll('.filter-input').forEach(input => {
+    input.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            updateFiltersFromInputs();
+            loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+        }, 300);
+    });
+    input.addEventListener('change', function() {
+        if (this.tagName === 'SELECT') {
+            updateFiltersFromInputs();
+            loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+        }
+    });
+});
+
+// Функция применения фильтров
+function applySearchFilters() {
+    currentSearch = document.getElementById('itemsSearch').value.trim();
+    currentSort = document.getElementById('itemsSort').value;
+    currentDirection = document.getElementById('itemsOrder').value;
+    currentLimit = parseInt(document.getElementById('itemsPerPage').value);
+
+    updateFiltersFromInputs();
+    loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+}
+
+// Функция сброса фильтров
+function resetSearchFilters() {
+    document.getElementById('itemsSearch').value = '';
+    document.getElementById('itemsSort').selectedIndex = 0;
+    document.getElementById('itemsOrder').selectedIndex = 0;
+    document.getElementById('itemsPerPage').value = '25';
+
+    document.querySelectorAll('.filter-input').forEach(input => {
+        input.value = '';
+        if (input.tagName === 'SELECT') {
+            input.selectedIndex = 0;
+        }
+    });
+
+    currentSearch = '';
+    currentSort = 'created_at';
+    currentDirection = 'desc';
+    currentLimit = 25;
+    currentFilters = {};
+
+    loadItems(1, currentSort, currentDirection, currentSearch, currentFilters, currentLimit);
+}
+
+// Функция обновления фильтров из полей ввода
+function updateFiltersFromInputs() {
+    currentFilters = {};
+
+    document.querySelectorAll('.filter-input').forEach(input => {
+        const field = input.getAttribute('data-field');
+        let value = input.value.trim();
+
+        if (value !== '') {
+            // Convert boolean values
+            if (input.type === 'select-one' && (field.startsWith('custom_bool'))) {
+                value = value === '1' ? '1' : (value === '0' ? '0' : value);
+            }
+
+            currentFilters[field] = value;
+        }
+    });
+
+}
+
+</script>

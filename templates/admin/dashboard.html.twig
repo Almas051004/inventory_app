@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'admin.dashboard.title'|trans }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">{{ 'admin.dashboard.title'|trans }}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ 'admin.dashboard.total_users'|trans }}</h5>
+                <h2 class="text-primary">{{ stats.total_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ 'admin.dashboard.blocked_users'|trans }}</h5>
+                <h2 class="text-danger">{{ stats.blocked_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ 'admin.dashboard.admin_users'|trans }}</h5>
+                <h2 class="text-warning">{{ stats.admin_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ 'admin.dashboard.active_users'|trans }}</h5>
+                <h2 class="text-success">{{ stats.total_users - stats.blocked_users }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ 'admin.dashboard.recent_users'|trans }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ 'admin.dashboard.table.user'|trans }}</th>
+                                <th>Email</th>
+                                <th>{{ 'admin.dashboard.table.registration_date'|trans }}</th>
+                                <th>{{ 'admin.dashboard.table.status'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in stats.recent_users %}
+                            <tr>
+                                <td>
+                                    {% if user.avatarUrl %}
+                                        <img src="{{ user.avatarUrl }}" alt="Avatar" class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                                    {% endif %}
+                                    {{ user.username ?? ('admin.dashboard.table.no_username'|trans) }}
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.createdAt|date('d.m.Y H:i') }}</td>
+                                <td>
+                                    {% if user.isBlocked %}
+                                        <span class="badge bg-danger">{{ 'admin.dashboard.table.status_blocked'|trans }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ 'admin.dashboard.table.status_active'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ 'admin.dashboard.quick_actions'|trans }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ path('admin_users') }}" class="btn btn-primary">{{ 'admin.dashboard.manage_users'|trans }}</a>
+                    <a href="{{ path('app_home') }}" class="btn btn-secondary">{{ 'admin.dashboard.back_to_home'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

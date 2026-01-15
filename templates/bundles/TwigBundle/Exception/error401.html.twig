@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'error.401.title'|trans }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <!-- Иконка замка -->
+                    <div class="mb-4">
+                        <i class="bi bi-shield-lock display-1 text-warning"></i>
+                    </div>
+
+                    <!-- Заголовок -->
+                    <h1 class="h3 mb-3">{{ 'error.401.title'|trans }}</h1>
+
+                    <!-- Описание -->
+                    <p class="text-muted mb-4">
+                        {{ 'error.401.description'|trans }}
+                    </p>
+
+                    <!-- Действия -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ path('app_home') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-house me-2"></i>
+                            {{ 'error.401.home'|trans }}
+                        </a>
+                    </div>
+
+                    <!-- Дополнительная информация -->
+                    <div class="mt-4 pt-4 border-top">
+                        <small class="text-muted">
+                            {{ 'error.401.help'|trans }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

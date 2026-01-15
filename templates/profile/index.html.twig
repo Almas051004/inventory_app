@@ -1,0 +1,608 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'profile.title'|trans }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ 'profile.title'|trans }}</h1>
+            <a href="{{ path('inventory_create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> {{ 'profile.create_inventory'|trans }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Мои инвентари -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ 'profile.owned_inventories'|trans({'%count%': owned_inventories|length}) }}</h5>
+                <div class="btn-group" role="group">
+                    <a href="#" class="btn btn-outline-primary btn-sm" onclick="sortInventories('owned', 'created_at', 'desc', event)">
+                        <i class="bi bi-calendar-event"></i> {{ 'profile.sort_by_date'|trans }}
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm" onclick="sortInventories('owned', 'title', 'asc', event)">
+                        <i class="bi bi-alphabetical"></i> {{ 'profile.sort_by_name'|trans }}
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm" onclick="sortInventories('owned', 'item_count', 'desc', event)">
+                        <i class="bi bi-graph-up"></i> {{ 'profile.sort_by_popularity'|trans }}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Toolbar для действий -->
+            <div class="d-flex justify-content-between align-items-center mb-3 px-3 pt-3" id="ownedToolbar" style="display: none;">
+                <div>
+                    <span id="ownedSelectedCount" class="text-muted">{{ 'profile.selected_inventories'|trans({'%count%': 0}) }}</span>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="ownedEditBtn">
+                        <i class="bi bi-pencil"></i> {{ 'profile.edit'|trans }}
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" id="ownedDeleteBtn">
+                        <i class="bi bi-trash"></i> {{ 'profile.delete'|trans }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% if owned_inventories is not empty %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="owned-inventories-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAllOwned">
+                                </th>
+                                <th>{{ 'profile.table.name'|trans }}</th>
+                                <th>{{ 'profile.table.description'|trans }}</th>
+                                <th>{{ 'profile.table.category'|trans }}</th>
+                                <th>{{ 'profile.table.items'|trans }}</th>
+                                <th>{{ 'profile.table.created'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in owned_inventories %}
+                            <tr data-created-at="{{ inventory[0].createdAt|date('U') }}"
+                                data-title="{{ inventory[0].title }}"
+                                data-item-count="{{ inventory.item_count }}">
+                                <td>
+                                    <input type="checkbox" class="form-check-input owned-checkbox" value="{{ inventory[0].id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if inventory[0].imageUrl %}
+                                            <img src="{{ inventory[0].imageUrl }}" alt="{{ 'profile.image_alt'|trans }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{{ path('inventory_show', {id: inventory[0].id}) }}" class="text-decoration-none fw-bold">
+                                                {{ inventory[0].title }}
+                                            </a>
+                                            {% if inventory[0].isPublic %}
+                                                <span class="badge bg-success ms-1">{{ 'profile.public'|trans }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary ms-1">{{ 'profile.private'|trans }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ inventory[0].description }}">
+                                        {% if inventory[0].description %}
+                                            {{ inventory[0].description|length > 100 ? inventory[0].description|slice(0, 100) ~ '...' : inventory[0].description }}
+                                        {% else %}
+                                            <span class="text-muted">{{ 'profile.no_description'|trans }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ inventory.category_name ?? ('profile.no_category'|trans) }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ inventory.item_count }}</span>
+                                </td>
+                                <td>{{ inventory[0].createdAt|date('d.m.Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                    <h5 class="text-muted">{{ 'profile.no_owned_inventories'|trans }}</h5>
+                    <p class="text-muted">{{ 'profile.no_owned_inventories_description'|trans }}</p>
+                    <a href="{{ path('inventory_create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> {{ 'profile.create_first_inventory'|trans }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Доступные инвентари -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ 'profile.accessible_inventories'|trans({'%count%': accessible_inventories|length}) }}</h5>
+                <div class="btn-group" role="group">
+                    <a href="#" class="btn btn-outline-primary btn-sm" onclick="sortInventories('accessible', 'created_at', 'desc', event)">
+                        <i class="bi bi-calendar-event"></i> {{ 'profile.sort_by_date'|trans }}
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm" onclick="sortInventories('accessible', 'title', 'asc', event)">
+                        <i class="bi bi-alphabetical"></i> {{ 'profile.sort_by_name'|trans }}
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm" onclick="sortInventories('accessible', 'item_count', 'desc', event)">
+                        <i class="bi bi-graph-up"></i> {{ 'profile.sort_by_popularity'|trans }}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Toolbar для действий -->
+            <div class="d-flex justify-content-between align-items-center mb-3 px-3 pt-3" id="accessibleToolbar" style="display: none;">
+                <div>
+                    <span id="accessibleSelectedCount" class="text-muted">{{ 'profile.selected_inventories'|trans({'%count%': 0}) }}</span>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="accessibleViewBtn">
+                        <i class="bi bi-eye"></i> {{ 'profile.view'|trans }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% if accessible_inventories is not empty %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="accessible-inventories-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAllAccessible">
+                                </th>
+                                <th>{{ 'profile.table.name'|trans }}</th>
+                                <th>{{ 'profile.table.description'|trans }}</th>
+                                <th>{{ 'profile.table.owner'|trans }}</th>
+                                <th>{{ 'profile.table.category'|trans }}</th>
+                                <th>{{ 'profile.table.items'|trans }}</th>
+                                <th>{{ 'profile.table.created'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in accessible_inventories %}
+                            <tr data-created-at="{{ inventory[0].createdAt|date('U') }}"
+                                data-title="{{ inventory[0].title }}"
+                                data-item-count="{{ inventory.item_count }}">
+                                <td>
+                                    <input type="checkbox" class="form-check-input accessible-checkbox" value="{{ inventory[0].id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if inventory[0].imageUrl %}
+                                            <img src="{{ inventory[0].imageUrl }}" alt="{{ 'profile.image_alt'|trans }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{{ path('inventory_show', {id: inventory[0].id}) }}" class="text-decoration-none fw-bold">
+                                                {{ inventory[0].title }}
+                                            </a>
+                                            {% if inventory[0].isPublic %}
+                                                <span class="badge bg-success ms-1">{{ 'profile.public'|trans }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning ms-1">{{ 'profile.access_granted'|trans }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ inventory[0].description }}">
+                                        {% if inventory[0].description %}
+                                            {{ inventory[0].description|length > 100 ? inventory[0].description|slice(0, 100) ~ '...' : inventory[0].description }}
+                                        {% else %}
+                                            <span class="text-muted">{{ 'profile.no_description'|trans }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if inventory[0].creator.avatarUrl %}
+                                            <img src="{{ inventory[0].creator.avatarUrl }}" alt="Avatar" class="rounded-circle me-2" style="width: 24px; height: 24px;">
+                                        {% endif %}
+                                        <span>{{ inventory[0].creator.username ?? inventory[0].creator.email }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ inventory.category_name ?? ('profile.no_category'|trans) }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ inventory.item_count }}</span>
+                                </td>
+                                <td>{{ inventory[0].createdAt|date('d.m.Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-share display-4 text-muted mb-3"></i>
+                    <h5 class="text-muted">{{ 'profile.no_accessible_inventories'|trans }}</h5>
+                    <p class="text-muted">{{ 'profile.no_accessible_inventories_description'|trans }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">{{ 'modal.delete_title'|trans }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'modal.delete_close'|trans }}"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ 'modal.delete_message'|trans({'%title%': '<strong id="deleteInventoryTitle"></strong>'})|raw }}</p>
+                <p class="text-danger">{{ 'modal.delete_warning'|trans }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'modal.cancel'|trans }}</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">{{ 'modal.delete'|trans }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Глобальные переменные для отслеживания выбранных элементов
+let selectedOwnedInventories = new Set();
+let selectedAccessibleInventories = new Set();
+
+// Функция для сортировки таблиц
+function sortInventories(tableType, sortBy, sortOrder, event) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    const tableId = tableType === 'owned' ? 'owned-inventories-table' : 'accessible-inventories-table';
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length === 0) return;
+
+    rows.sort((a, b) => {
+        let aValue, bValue;
+
+        switch (sortBy) {
+            case 'created_at':
+                aValue = parseInt(a.dataset.createdAt || 0);
+                bValue = parseInt(b.dataset.createdAt || 0);
+                break;
+            case 'title':
+                aValue = (a.dataset.title || '').toLowerCase();
+                bValue = (b.dataset.title || '').toLowerCase();
+                break;
+            case 'item_count':
+                aValue = parseInt(a.dataset.itemCount || 0);
+                bValue = parseInt(b.dataset.itemCount || 0);
+                break;
+            default:
+                return 0;
+        }
+
+        if (sortOrder === 'desc') {
+            return bValue > aValue ? 1 : bValue < aValue ? -1 : 0;
+        } else {
+            return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        }
+    });
+
+    // Перестраиваем таблицу
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Обновление счетчика выбранных элементов
+function updateOwnedToolbar() {
+    const count = selectedOwnedInventories.size;
+    const toolbar = document.getElementById('ownedToolbar');
+    const selectedCount = document.getElementById('ownedSelectedCount');
+
+    if (count > 0) {
+        toolbar.style.display = 'flex';
+        selectedCount.textContent = '{{ 'profile.selected_inventories'|trans({'%count%': 'count'}) }}'.replace('count', count);
+    } else {
+        toolbar.style.display = 'none';
+    }
+}
+
+// Обновление счетчиков в заголовках таблиц
+function updateTableCounters() {
+    const ownedTable = document.getElementById('owned-inventories-table');
+    const accessibleTable = document.getElementById('accessible-inventories-table');
+
+    if (ownedTable) {
+        const ownedRows = ownedTable.querySelectorAll('tbody tr').length;
+        const ownedHeader = document.querySelector('.card-header h5.mb-0');
+        if (ownedHeader && ownedHeader.textContent.includes('{{ 'profile.owned_inventories'|trans }}')) {
+            ownedHeader.textContent = '{{ 'profile.owned_inventories'|trans({'%count%': 'ownedRows'}) }}'.replace('ownedRows', ownedRows);
+        }
+    }
+
+    if (accessibleTable) {
+        const accessibleRows = accessibleTable.querySelectorAll('tbody tr').length;
+        const accessibleHeader = document.querySelectorAll('.card-header h5.mb-0')[1];
+        if (accessibleHeader && accessibleHeader.textContent.includes('{{ 'profile.accessible_inventories'|trans }}')) {
+            accessibleHeader.textContent = '{{ 'profile.accessible_inventories'|trans({'%count%': 'accessibleRows'}) }}'.replace('accessibleRows', accessibleRows);
+        }
+    }
+}
+
+function updateAccessibleToolbar() {
+    const count = selectedAccessibleInventories.size;
+    const toolbar = document.getElementById('accessibleToolbar');
+    const selectedCount = document.getElementById('accessibleSelectedCount');
+
+    if (count > 0) {
+        toolbar.style.display = 'flex';
+        selectedCount.textContent = '{{ 'profile.selected_inventories'|trans({'%count%': 'count'}) }}'.replace('count', count);
+    } else {
+        toolbar.style.display = 'none';
+    }
+}
+
+// Обновление чекбокса "Выбрать все"
+function updateSelectAllCheckbox(tableType) {
+    const selectAll = document.getElementById(tableType === 'owned' ? 'selectAllOwned' : 'selectAllAccessible');
+    if (!selectAll) return;
+
+    const checkboxes = document.querySelectorAll(tableType === 'owned' ? '.owned-checkbox' : '.accessible-checkbox');
+
+    if (checkboxes.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+    }
+
+    const checkedBoxes = document.querySelectorAll(tableType === 'owned' ? '.owned-checkbox:checked' : '.accessible-checkbox:checked');
+    selectAll.checked = checkedBoxes.length === checkboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+}
+
+// Обработка клика "Выбрать все"
+function handleSelectAll(event, tableType) {
+    const selectAll = event.target;
+    const checkboxes = document.querySelectorAll(tableType === 'owned' ? '.owned-checkbox' : '.accessible-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+        const inventoryId = parseInt(checkbox.value);
+
+        if (tableType === 'owned') {
+            if (selectAll.checked) {
+                selectedOwnedInventories.add(inventoryId);
+            } else {
+                selectedOwnedInventories.delete(inventoryId);
+            }
+        } else {
+            if (selectAll.checked) {
+                selectedAccessibleInventories.add(inventoryId);
+            } else {
+                selectedAccessibleInventories.delete(inventoryId);
+            }
+        }
+    });
+
+    if (tableType === 'owned') {
+        updateOwnedToolbar();
+    } else {
+        updateAccessibleToolbar();
+    }
+}
+
+// Обработка выбора отдельных элементов
+function handleInventorySelection(event, tableType) {
+    const checkbox = event.target;
+    const inventoryId = parseInt(checkbox.value);
+
+    if (tableType === 'owned') {
+        if (checkbox.checked) {
+            selectedOwnedInventories.add(inventoryId);
+        } else {
+            selectedOwnedInventories.delete(inventoryId);
+        }
+        updateOwnedToolbar();
+        updateSelectAllCheckbox('owned');
+    } else {
+        if (checkbox.checked) {
+            selectedAccessibleInventories.add(inventoryId);
+        } else {
+            selectedAccessibleInventories.delete(inventoryId);
+        }
+        updateAccessibleToolbar();
+        updateSelectAllCheckbox('accessible');
+    }
+}
+
+// Функция для подтверждения удаления
+function confirmDelete(inventoryId, inventoryTitle) {
+    document.getElementById('deleteInventoryTitle').textContent = inventoryTitle;
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        deleteInventory(inventoryId);
+    };
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Функция для удаления инвентаря
+function deleteInventory(inventoryId) {
+    fetch(`/inventories/api/${inventoryId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || '{{ 'js.inventory_deleted'|trans }}');
+
+            // Удаляем строку из таблицы
+            const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`) ||
+                       document.querySelector(`input[value="${inventoryId}"]`).closest('tr');
+            if (row) {
+                row.remove();
+            }
+
+            // Обновляем счетчики
+            updateTableCounters();
+
+            // Очищаем выделение
+            selectedOwnedInventories.delete(parseInt(inventoryId));
+            updateOwnedToolbar();
+            updateSelectAllCheckbox('owned');
+
+        } else {
+            showNotification(data.error || '{{ 'js.delete_error'|trans }}');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('{{ 'js.delete_error'|trans }}');
+    });
+
+    // Закрываем модальное окно
+    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+    modal.hide();
+}
+
+// Функция для массового удаления инвентарей
+function deleteMultipleInventories(inventoryIds) {
+    fetch('/inventories/api/batch-delete', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ inventory_ids: inventoryIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || '{{ 'js.inventories_deleted'|trans({'%count%': 'data.deleted_count'}) }}'.replace('data.deleted_count', data.deleted_count));
+
+            // Удаляем строки из таблицы
+            inventoryIds.forEach(id => {
+                const row = document.querySelector(`tr[data-inventory-id="${id}"]`) ||
+                           document.querySelector(`input[value="${id}"]`).closest('tr');
+                if (row) {
+                    row.remove();
+                }
+            });
+
+            // Обновляем счетчики
+            updateTableCounters();
+
+            // Очищаем выделение
+            inventoryIds.forEach(id => selectedOwnedInventories.delete(parseInt(id)));
+            updateOwnedToolbar();
+            updateSelectAllCheckbox('owned');
+
+        } else {
+            showNotification(data.error || '{{ 'js.delete_error'|trans }}');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('{{ 'js.delete_error'|trans }}');
+    });
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчики для чекбоксов "Выбрать все"
+    const selectAllOwned = document.getElementById('selectAllOwned');
+    const selectAllAccessible = document.getElementById('selectAllAccessible');
+
+    if (selectAllOwned) {
+        selectAllOwned.addEventListener('change', (e) => handleSelectAll(e, 'owned'));
+    }
+
+    if (selectAllAccessible) {
+        selectAllAccessible.addEventListener('change', (e) => handleSelectAll(e, 'accessible'));
+    }
+
+    // Обработчики для индивидуальных чекбоксов
+    document.querySelectorAll('.owned-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => handleInventorySelection(e, 'owned'));
+    });
+
+    document.querySelectorAll('.accessible-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => handleInventorySelection(e, 'accessible'));
+    });
+
+    // Обработчики для кнопок toolbar
+    const ownedEditBtn = document.getElementById('ownedEditBtn');
+    const ownedDeleteBtn = document.getElementById('ownedDeleteBtn');
+    const accessibleViewBtn = document.getElementById('accessibleViewBtn');
+
+    if (ownedEditBtn) {
+        ownedEditBtn.addEventListener('click', () => {
+            if (selectedOwnedInventories.size === 1) {
+                const inventoryId = Array.from(selectedOwnedInventories)[0];
+                window.location.href = `/inventories/${inventoryId}`;
+            } else {
+                showNotification('{{ 'js.select_one_inventory_edit'|trans }}');
+            }
+        });
+    }
+
+    if (ownedDeleteBtn) {
+        ownedDeleteBtn.addEventListener('click', () => {
+            if (selectedOwnedInventories.size === 1) {
+                // Удаление одного инвентаря
+                const inventoryId = Array.from(selectedOwnedInventories)[0];
+                const row = document.querySelector(`input[value="${inventoryId}"]`).closest('tr');
+                const title = row.querySelector('a.fw-bold').textContent.trim();
+                confirmDelete(inventoryId, title);
+            } else if (selectedOwnedInventories.size > 1) {
+                // Массовая удаление
+                const inventoryIds = Array.from(selectedOwnedInventories);
+                const message = '{{ 'modal.delete_multiple_message'|trans({'%count%': 'inventoryIds.length'}) }}'.replace('inventoryIds.length', inventoryIds.length);
+
+                showConfirmationModal(message, function(confirmed) {
+                    if (confirmed) {
+                        deleteMultipleInventories(inventoryIds);
+                    }
+                });
+            }
+        });
+    }
+
+    if (accessibleViewBtn) {
+        accessibleViewBtn.addEventListener('click', () => {
+            if (selectedAccessibleInventories.size === 1) {
+                const inventoryId = Array.from(selectedAccessibleInventories)[0];
+                window.location.href = `/inventories/${inventoryId}`;
+            } else {
+                showNotification('{{ 'js.select_one_inventory_view'|trans }}');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

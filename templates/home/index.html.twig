@@ -1,0 +1,166 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'nav.home'|trans }}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-light p-4 rounded mb-4">
+            <h1 class="display-4">{{ 'home.welcome_title'|trans }}</h1>
+            <p class="lead">{{ 'home.welcome_subtitle'|trans }}</p>
+            {% if app.user %}
+                <p>{{ 'home.welcome_back'|trans({'%username%': app.user.username ?? app.user.email}) }}</p>
+            {% else %}
+                <p>{{ 'home.login_prompt'|trans }}</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ path('auth_google') }}" class="btn btn-outline-danger">
+                        <i class="bi bi-google"></i> {{ 'home.login_google'|trans }}
+                    </a>
+                    <a href="{{ path('auth_facebook') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-facebook"></i> {{ 'home.login_facebook'|trans }}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Latest Inventories Table -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i> {{ 'home.latest_inventories'|trans }}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ 'table.name'|trans }}</th>
+                                <th>{{ 'table.description'|trans }}</th>
+                                <th>{{ 'table.category'|trans }}</th>
+                                <th>{{ 'table.creator'|trans }}</th>
+                                <th>{{ 'table.created_date'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in latestInventories %}
+                            <tr style="cursor: pointer;" onclick="window.location.href='{{ path('inventory_show', {'id': inventory[0].id}) }}'">
+                                <td>
+                                    <strong>{{ inventory[0].title }}</strong>
+                                    {% if inventory[0].isPublic %}
+                                        <span class="badge bg-success ms-1">{{ 'table.public'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if inventory[0].description %}
+                                        <span title="{{ inventory[0].description|striptags }}">{{ inventory[0].description|striptags|slice(0, 100) }}{% if inventory[0].description|length > 100 %}...{% endif %}</span>
+                                    {% else %}
+                                        <em class="text-muted">{{ 'table.no_description'|trans }}</em>
+                                    {% endif %}
+                                </td>
+                                <td>{{ inventory.category_name ?? ('table.not_specified'|trans) }}</td>
+                                <td>{{ inventory.username ?? inventory.email ?? ('table.unknown'|trans) }}</td>
+                                <td>{{ inventory[0].createdAt|date('d.m.Y H:i') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox"></i> {{ 'table.no_inventories'|trans }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Popular Inventories Table -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-trophy"></i> {{ 'home.popular_inventories'|trans }}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ 'table.name'|trans }}</th>
+                                <th>{{ 'table.category'|trans }}</th>
+                                <th>{{ 'table.creator'|trans }}</th>
+                                <th>{{ 'table.items_count'|trans }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in popularInventories %}
+                            <tr style="cursor: pointer;" onclick="window.location.href='{{ path('inventory_show', {'id': inventory[0].id}) }}'">
+                                <td>
+                                    <strong>{{ inventory[0].title }}</strong>
+                                    {% if inventory[0].isPublic %}
+                                        <span class="badge bg-success ms-1">{{ 'table.public'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ inventory.category_name ?? ('table.not_specified'|trans) }}</td>
+                                <td>{{ inventory.username ?? inventory.email ?? ('table.unknown'|trans) }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ inventory.item_count }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="bi bi-graph-up"></i> {{ 'table.no_popular_inventories'|trans }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Cloud -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-tags"></i> {{ 'home.popular_tags'|trans }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if popularTags %}
+                    <div class="tag-cloud">
+                        {% for tag in popularTags %}
+                            {% set fontSize = 12 + (tag.inventory_count * 2) %}
+                            {% if fontSize > 24 %}
+                                {% set fontSize = 24 %}
+                            {% endif %}
+                            <a href="{{ path('app_search', {'tags': [tag[0].id]}) }}"
+                               class="badge bg-secondary me-1 mb-1 d-inline-block"
+                               style="font-size: {{ fontSize }}px; --bs-badge-font-size: {{ fontSize }}px;">
+                                {{ tag[0].name }} ({{ tag.inventory_count }})
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-tag"></i> {{ 'table.no_tags'|trans }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

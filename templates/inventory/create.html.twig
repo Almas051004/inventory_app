@@ -1,0 +1,454 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'create_inventory.title'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Сообщения об ошибках -->
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h4 mb-0">{{ 'create_inventory.heading'|trans }}</h1>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('inventory_create') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="_token" value="{{ csrf_token('create_inventory') }}">
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">
+                                {{ 'create_inventory.title_label'|trans }} {{ 'create_inventory.required'|trans }}
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="title"
+                                   name="title"
+                                   required
+                                   maxlength="255"
+                                   placeholder="{{ 'create_inventory.title_placeholder'|trans }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                {{ 'create_inventory.description_label'|trans }}
+                                <small class="text-muted">{{ 'create_inventory.description_hint'|trans }}</small>
+                            </label>
+                            <textarea class="form-control"
+                                      id="description"
+                                      name="description"
+                                      rows="6"
+                                      placeholder="{{ 'create_inventory.description_placeholder'|trans }}
+
+{{ 'create_inventory.markdown_examples'|trans }}"></textarea>
+                            <div class="form-text">
+                                <a href="#" id="preview-toggle" class="text-decoration-none">{{ 'create_inventory.show_preview'|trans }}</a>
+                            </div>
+                        </div>
+
+                        <!-- Превью Markdown -->
+                        <div class="mb-3 d-none" id="description-preview">
+                            <label class="form-label">{{ 'create_inventory.preview_label'|trans }}</label>
+                            <div class="border rounded p-3 bg-light" id="preview-content">
+                                <!-- Превью будет заполняться JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">
+                                {{ 'create_inventory.category_label'|trans }} {{ 'create_inventory.required'|trans }}
+                            </label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">{{ 'create_inventory.category_placeholder'|trans }}</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">
+                                {{ 'create_inventory.tags_label'|trans }}
+                                <small class="text-muted">{{ 'create_inventory.tags_hint'|trans }}</small>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="tags"
+                                   name="tags"
+                                   placeholder="{{ 'create_inventory.tags_placeholder'|trans }}"
+                                   autocomplete="off">
+                            <div class="form-text">
+                                {{ 'create_inventory.tags_help'|trans }}
+                            </div>
+                            <!-- Контейнер для подсказок автодополнения -->
+                            <div id="tags-suggestions" class="position-absolute bg-white border rounded shadow-sm d-none" style="z-index: 1000; max-height: 200px; overflow-y: auto; width: calc(100% - 2rem);"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="image" class="form-label">
+                                {{ 'create_inventory.image_label'|trans }}
+                                <small class="text-muted">{{ 'create_inventory.image_hint'|trans }}</small>
+                            </label>
+                            <input type="file"
+                                   class="form-control"
+                                   id="image"
+                                   name="image"
+                                   accept="image/*">
+                            <div class="form-text">
+                                {{ 'create_inventory.image_help'|trans }}
+                            </div>
+                            <!-- Превью загруженного изображения -->
+                            <div id="image-preview" class="mt-2 d-none">
+                                <img id="preview-img" src="" alt="{{ 'create_inventory.image_preview_alt'|trans }}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="is_public"
+                                       name="is_public">
+                                <label class="form-check-label" for="is_public">
+                                    {{ 'create_inventory.public_access'|trans }}
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                {{ 'create_inventory.public_access_description'|trans }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus"></i> {{ 'create_inventory.create'|trans }}
+                            </button>
+                            <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
+                                    <i class="fa fa-times"></i> {{ 'create_inventory.cancel'|trans }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    #preview-content {
+        min-height: 100px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+// Функция для простого парсинга Markdown (базовые элементы)
+function simpleMarkdownToHtml(text) {
+    return text
+        // Заголовки
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // Жирный и курсив
+        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+        // Код
+        .replace(/`([^`]+)`/gim, '<code>$1</code>')
+        // Ссылки
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+        // Списки - сначала группируем в ul/ol
+        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+        .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ol>$&</ol>')
+        // Переносы строк
+        .replace(/\n/gim, '<br>');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const descriptionTextarea = document.getElementById('description');
+    const previewToggle = document.getElementById('preview-toggle');
+    const previewDiv = document.getElementById('description-preview');
+    const previewContent = document.getElementById('preview-content');
+
+    if (!descriptionTextarea || !previewToggle || !previewDiv || !previewContent) {
+        return;
+    }
+
+    // Переключение превью
+    previewToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        if (previewDiv.classList.contains('d-none')) {
+            updatePreview();
+            previewDiv.classList.remove('d-none');
+            previewToggle.textContent = '{{ 'create_inventory.hide_preview'|trans|e('js') }}';
+        } else {
+            previewDiv.classList.add('d-none');
+            previewToggle.textContent = '{{ 'create_inventory.show_preview'|trans|e('js') }}';
+        }
+    });
+
+    // Обновление превью при вводе
+    descriptionTextarea.addEventListener('input', function() {
+        if (!previewDiv.classList.contains('d-none')) {
+            updatePreview();
+        }
+    });
+
+    function updatePreview() {
+        const markdown = descriptionTextarea.value;
+        const html = simpleMarkdownToHtml(markdown);
+        previewContent.innerHTML = html || '<em class="text-muted">{{ 'create_inventory.preview_empty'|trans|e('js') }}</em>';
+    }
+});
+
+// Автодополнение тегов
+document.addEventListener('DOMContentLoaded', function() {
+    // Предотвращаем повторную инициализацию
+    if (window.tagsAutocompleteInitialized) {
+        return;
+    }
+    window.tagsAutocompleteInitialized = true;
+
+    const tagsInput = document.getElementById('tags');
+    const suggestionsContainer = document.getElementById('tags-suggestions');
+
+    if (!tagsInput || !suggestionsContainer) {
+        return;
+    }
+
+    let currentQuery = '';
+    let selectedIndex = -1;
+    let suggestions = [];
+    let debounceTimer = null;
+    let isRequestPending = false;
+    let lastRequestQuery = '';
+    let requestCounter = 0;
+
+    // Обработка ввода с debounce
+    let lastInputTime = 0;
+    tagsInput.addEventListener('input', function() {
+        const value = this.value;
+        const cursorPosition = this.selectionStart;
+        const currentTime = Date.now();
+
+        // Находим последний тег (после последней запятой)
+        const lastCommaIndex = value.lastIndexOf(',', cursorPosition - 1);
+        const currentTagStart = lastCommaIndex + 1;
+        currentQuery = value.substring(currentTagStart).trim();
+
+        lastInputTime = currentTime;
+
+        if (currentQuery.length > 0) {
+            // Ждем 300ms после прекращения ввода перед отправкой запроса
+            setTimeout(() => {
+                // Проверяем, что это последний ввод (не было новых вводов за последние 300ms)
+                if (currentTime === lastInputTime && !isRequestPending && currentQuery === value.substring(lastCommaIndex + 1).trim()) {
+                    fetchSuggestions(currentQuery);
+                }
+            }, 300);
+        } else {
+            hideSuggestions();
+        }
+    });
+
+    // Обработка клавиш
+    tagsInput.addEventListener('keydown', function(e) {
+        if (!suggestionsContainer.classList.contains('d-none')) {
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateSuggestions(1);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateSuggestions(-1);
+                    break;
+                case 'Enter':
+                case 'Tab':
+                    if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+                        e.preventDefault();
+                        selectSuggestion(suggestions[selectedIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    hideSuggestions();
+                    break;
+            }
+        }
+    });
+
+    // Скрываем подсказки при клике вне поля
+    document.addEventListener('click', function(e) {
+        if (!tagsInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+
+    function fetchSuggestions(query) {
+        if (isRequestPending || query === lastRequestQuery) {
+            return; // Предотвращаем дублирование запросов
+        }
+
+        isRequestPending = true;
+        lastRequestQuery = query;
+
+        fetch(`{{ path('inventory_api_tags') }}?q=${encodeURIComponent(query)}&limit=8`)
+            .then(response => response.json())
+            .then(data => {
+                suggestions = data;
+                showSuggestions(suggestions, query);
+                isRequestPending = false;
+                lastRequestQuery = '';
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки подсказок:', error);
+                hideSuggestions();
+                isRequestPending = false;
+                lastRequestQuery = '';
+            });
+    }
+
+    function showSuggestions(suggestions, query) {
+        if (suggestions.length === 0) {
+            hideSuggestions();
+            return;
+        }
+
+        suggestionsContainer.innerHTML = '';
+        selectedIndex = -1;
+
+        suggestions.forEach((suggestion, index) => {
+            const item = document.createElement('div');
+            item.className = 'p-2 cursor-pointer';
+            item.style.cursor = 'pointer';
+            item.textContent = suggestion;
+
+            item.addEventListener('mouseenter', () => {
+                setSelectedIndex(index);
+            });
+
+            item.addEventListener('click', () => {
+                selectSuggestion(suggestion);
+            });
+
+            suggestionsContainer.appendChild(item);
+        });
+
+        // Позиционируем контейнер
+        const inputRect = tagsInput.getBoundingClientRect();
+        suggestionsContainer.style.top = (inputRect.bottom + window.scrollY) + 'px';
+        suggestionsContainer.style.left = (inputRect.left + window.scrollX) + 'px';
+        suggestionsContainer.style.width = inputRect.width + 'px';
+
+        suggestionsContainer.classList.remove('d-none');
+    }
+
+    function hideSuggestions() {
+        suggestionsContainer.classList.add('d-none');
+        selectedIndex = -1;
+    }
+
+    function navigateSuggestions(direction) {
+        const newIndex = selectedIndex + direction;
+        if (newIndex >= 0 && newIndex < suggestions.length) {
+            setSelectedIndex(newIndex);
+        }
+    }
+
+    function setSelectedIndex(index) {
+        // Снимаем выделение с предыдущего элемента
+        const items = suggestionsContainer.querySelectorAll('.p-2');
+        items.forEach(item => item.classList.remove('bg-primary', 'text-white'));
+
+        // Выделяем новый элемент
+        if (index >= 0 && index < items.length) {
+            items[index].classList.add('bg-primary', 'text-white');
+            selectedIndex = index;
+        } else {
+            selectedIndex = -1;
+        }
+    }
+
+    function selectSuggestion(suggestion) {
+        const value = tagsInput.value;
+        const cursorPosition = tagsInput.selectionStart;
+        const lastCommaIndex = value.lastIndexOf(',', cursorPosition - 1);
+        const currentTagStart = lastCommaIndex + 1;
+
+        // Заменяем текущий тег на выбранный
+        const beforeCurrentTag = value.substring(0, currentTagStart);
+        const afterCurrentTag = value.substring(cursorPosition);
+
+        const newValue = beforeCurrentTag + suggestion + ', ' + afterCurrentTag.trimStart();
+        tagsInput.value = newValue;
+
+        // Устанавливаем курсор после запятой
+        const newCursorPosition = beforeCurrentTag.length + suggestion.length + 2;
+        tagsInput.setSelectionRange(newCursorPosition, newCursorPosition);
+
+        hideSuggestions();
+        tagsInput.focus();
+    }
+});
+
+// Превью изображения
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('image');
+    const previewDiv = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+
+    if (imageInput && previewDiv && previewImg) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Проверяем тип файла
+                if (!file.type.startsWith('image/')) {
+                    showNotification('{{ 'js.select_image'|trans|e('js') }}');
+                    this.value = '';
+                    previewDiv.classList.add('d-none');
+                    return;
+                }
+
+                // Проверяем размер файла (макс 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification('{{ 'js.file_too_large'|trans|e('js') }}');
+                    this.value = '';
+                    previewDiv.classList.add('d-none');
+                    return;
+                }
+
+                // Создаем превью
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewDiv.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewDiv.classList.add('d-none');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

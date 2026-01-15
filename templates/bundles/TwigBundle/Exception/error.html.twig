@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'error.general.title'|trans }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <!-- Иконка ошибки -->
+                    <div class="mb-4">
+                        <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+                    </div>
+
+                    <!-- Заголовок -->
+                    <h1 class="h3 mb-3">{{ 'error.general.title'|trans }}</h1>
+
+                    <!-- Описание -->
+                    <p class="text-muted mb-4">
+                        {{ 'error.general.description'|trans }}
+                    </p>
+
+                    <!-- Код ошибки (если доступен) -->
+                    {% if status_code is defined %}
+                    <div class="alert alert-info mb-4">
+                        <strong>{{ 'error.code'|trans }}:</strong> {{ status_code }}
+                        {% if status_text is defined %}
+                        <br><small class="text-muted">{{ status_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Действия -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ path('app_home') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-house me-2"></i>
+                            {{ 'error.general.home'|trans }}
+                        </a>
+                        <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            {{ 'error.general.back'|trans }}
+                        </button>
+                    </div>
+
+                    <!-- Техническая информация для разработчиков -->
+                    {% if app.debug %}
+                    <div class="mt-4 pt-4 border-top">
+                        <details class="text-start">
+                            <summary class="text-muted small cursor-pointer">
+                                <i class="bi bi-code-slash me-1"></i>
+                                {{ 'error.debug_info'|trans }}
+                            </summary>
+                            <div class="mt-3 p-3 bg-light rounded small">
+                                <pre>{{ exception|format_exception }}</pre>
+                            </div>
+                        </details>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cursor-pointer {
+    cursor: pointer;
+}
+</style>
+{% endblock %}

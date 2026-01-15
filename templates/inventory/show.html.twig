@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ inventory.title }}{{ 'inventory.title_suffix'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Сообщения об успехе -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <!-- Сообщения об ошибках -->
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-12">
+            <!-- Заголовок инвентаря -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">{{ inventory.title }}</h1>
+                    <div class="text-muted mb-0">{{ inventory.description is not empty ? markdown_service.parseSafe(inventory.description)|raw : ('inventory.description_not_specified'|trans) }}</div>
+                    <small class="text-muted">
+                        {{ 'inventory.created_by'|trans({'%date%': inventory.createdAt|date('d.m.Y H:i'), '%user%': inventory.creator.username ?: inventory.creator.email}) }}
+                    </small>
+                </div>
+                {% if inventory.creator == app.user or is_granted('ROLE_ADMIN') %}
+                <div>
+                        <a href="#general-settings" class="btn btn-outline-primary">{{ 'inventory.edit'|trans }}</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Вкладки -->
+            <ul class="nav nav-tabs mb-4" id="inventoryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab" aria-controls="items" aria-selected="true">
+                        {{ 'tab.items'|trans }}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="discussion-tab" data-bs-toggle="tab" data-bs-target="#discussion" type="button" role="tab" aria-controls="discussion" aria-selected="false">
+                        {{ 'tab.discussion'|trans }}
+                    </button>
+                </li>
+                {% if inventory.creator == app.user or is_granted('ROLE_ADMIN') %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="general-settings-tab" data-bs-toggle="tab" data-bs-target="#general-settings" type="button" role="tab" aria-controls="general-settings" aria-selected="false">
+                        {{ 'tab.general_settings'|trans }}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="custom-ids-tab" data-bs-toggle="tab" data-bs-target="#custom-ids" type="button" role="tab" aria-controls="custom-ids" aria-selected="false">
+                        {{ 'tab.custom_ids'|trans }}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="access-settings-tab" data-bs-toggle="tab" data-bs-target="#access-settings" type="button" role="tab" aria-controls="access-settings" aria-selected="false">
+                        {{ 'tab.access_settings'|trans }}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="fields-tab" data-bs-toggle="tab" data-bs-target="#fields" type="button" role="tab" aria-controls="fields" aria-selected="false">
+                        {{ 'tab.fields'|trans }}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab" aria-controls="statistics" aria-selected="false">
+                        {{ 'tab.statistics'|trans }}
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- Содержимое вкладок -->
+            <div class="tab-content" id="inventoryTabsContent">
+                {% include 'inventory/tabs/_items_tab.html.twig' %}
+                {% include 'inventory/tabs/_discussion_tab.html.twig' %}
+                {% if inventory.creator == app.user or is_granted('ROLE_ADMIN') %}
+                {% include 'inventory/tabs/_general_settings_tab.html.twig' %}
+                {% include 'inventory/tabs/_custom_ids_tab.html.twig' %}
+                {% include 'inventory/tabs/_access_settings_tab.html.twig' %}
+                {% include 'inventory/tabs/_fields_tab.html.twig' %}
+                {% include 'inventory/tabs/_statistics_tab.html.twig' %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% include 'inventory/tabs/_javascript.html.twig' %}
+{% endblock %}
