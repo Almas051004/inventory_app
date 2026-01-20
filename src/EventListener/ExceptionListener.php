@@ -24,20 +24,16 @@ final class ExceptionListener
     {
         $exception = $event->getThrowable();
 
-        // Не логируем ошибки маршрутизации (404, 405), AccessDeniedException и AuthenticationCredentialsNotFoundException
         if ($this->isRoutingException($exception) ||
             $exception instanceof AccessDeniedException ||
             $exception instanceof AuthenticationCredentialsNotFoundException) {
-            // Если отключено отображение кастомных шаблонов ошибок, позволяем Symfony показать стандартные страницы
             if (!$this->showCustomErrorTemplates) {
                 return;
             }
         } else {
-            // Логируем другие исключения
             $this->errorHandler->logException($exception, 'Unhandled exception');
         }
 
-        // Если отключено отображение кастомных шаблонов ошибок, позволяем Symfony показать стандартные страницы
         if (!$this->showCustomErrorTemplates) {
             return;
         }
@@ -48,19 +44,16 @@ final class ExceptionListener
 
         // AccessDeniedException (403 Forbidden)
         if ($exception instanceof AccessDeniedException) {
-            // Если отключено отображение кастомных шаблонов ошибок, позволяем Symfony показать стандартные страницы
             if (!$this->showCustomErrorTemplates) {
                 return;
             }
 
             if ($isAjax) {
-                // Для AJAX запросов возвращаем JSON
                 $message = $this->translator->trans('controller.access_denied');
                 $response = new \Symfony\Component\HttpFoundation\JsonResponse([
                     'error' => $message
                 ], 403);
             } else {
-                // Для обычных запросов перенаправляем на страницу ошибки
                 $response = new \Symfony\Component\HttpFoundation\RedirectResponse(
                     $this->router->generate('app_error_403')
                 );
@@ -73,11 +66,9 @@ final class ExceptionListener
         if ($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
             $message = $exception->getMessage();
 
-            // Проверяем, является ли это ошибкой аутентификации
             if (str_contains($message, 'Full authentication is required') ||
                 str_contains($message, 'authentication')) {
 
-                // Если отключено отображение кастомных шаблонов ошибок, позволяем Symfony показать стандартные страницы
                 if (!$this->showCustomErrorTemplates) {
                     return;
                 }
@@ -95,9 +86,7 @@ final class ExceptionListener
                 return;
             }
 
-            // Для других HttpException возвращаем 403 если статус >= 400
             if ($exception->getStatusCode() >= 400) {
-                // Если отключено отображение кастомных шаблонов ошибок, позволяем Symfony показать стандартные страницы
                 if (!$this->showCustomErrorTemplates) {
                     return;
                 }
@@ -118,19 +107,16 @@ final class ExceptionListener
 
         // AuthenticationCredentialsNotFoundException (401 Unauthorized)
         if ($exception instanceof AuthenticationCredentialsNotFoundException) {
-            // Если отключено отображение кастомных шаблонов ошибок, позволяем Symfony показать стандартные страницы
             if (!$this->showCustomErrorTemplates) {
                 return;
             }
 
             if ($isAjax) {
-                // Для AJAX запросов возвращаем JSON
                 $message = $this->translator->trans('controller.authentication_required');
                 $response = new \Symfony\Component\HttpFoundation\JsonResponse([
                     'error' => $message
                 ], 401);
             } else {
-                // Для обычных запросов перенаправляем на страницу ошибки
                 $response = new \Symfony\Component\HttpFoundation\RedirectResponse(
                     $this->router->generate('app_error_401')
                 );

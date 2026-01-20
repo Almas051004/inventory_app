@@ -88,7 +88,6 @@ class AuthController extends AbstractController
 
             $user = $this->oauth2Service->findOrCreateUserFromGoogle($userData);
 
-            // Проверяем, не заблокирован ли пользователь
             if ($user->isBlocked()) {
                 $this->addFlash('error', $this->translator->trans('auth.account_blocked'));
                 return $this->redirectToRoute('app_home');
@@ -165,7 +164,6 @@ class AuthController extends AbstractController
 
             $user = $this->oauth2Service->findOrCreateUserFromFacebook($userData);
 
-            // Проверяем, не заблокирован ли пользователь
             if ($user->isBlocked()) {
                 $this->addFlash('error', $this->translator->trans('auth.account_blocked'));
                 return $this->redirectToRoute('app_home');

@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'support.create_title'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Сообщения об ошибках -->
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+
+            <!-- Сообщения об успехе -->
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h4 mb-0">{{ 'support.create_heading'|trans }}</h1>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('support_create') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('create_support_ticket') }}">
+                        <input type="hidden" name="page_url" value="{{ page_url }}">
+
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">
+                                {{ 'support.summary_label'|trans }} {{ 'support.required'|trans }}
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="summary"
+                                   name="summary"
+                                   required
+                                   maxlength="255"
+                                   placeholder="{{ 'support.summary_placeholder'|trans }}">
+                            <div class="form-text">
+                                {{ 'support.summary_help'|trans }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">
+                                {{ 'support.priority_label'|trans }}
+                            </label>
+                            <select class="form-select" id="priority" name="priority">
+                                {% for value, label in priorities %}
+                                    <option value="{{ value }}"{% if value == constant('App\\Entity\\SupportTicket::PRIORITY_MEDIUM') %} selected{% endif %}>
+                                        {{ label|trans }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                {{ 'support.priority_help'|trans }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i>
+                                {{ 'support.page_info'|trans({'%url%': page_url}) }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                                {{ 'support.submit'|trans }}
+                            </button>
+                            <a href="{{ page_url }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i>
+                                {{ 'support.cancel'|trans }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

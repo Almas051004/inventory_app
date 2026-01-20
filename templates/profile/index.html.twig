@@ -14,6 +14,65 @@
     </div>
 </div>
 
+<!-- Salesforce Integration -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                    {{ 'profile.salesforce_integration'|trans }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if salesforce_integration %}
+                    {% if salesforce_integration.salesforceAccountId %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            {{ 'profile.salesforce_synced'|trans }}
+                            {% if salesforce_integration.salesforceAccountId %}
+                                <br><small class="text-muted">{{ 'profile.salesforce_account_id'|trans }}: {{ salesforce_integration.salesforceAccountId }}</small>
+                            {% endif %}
+                            {% if salesforce_integration.salesforceContactId %}
+                                <br><small class="text-muted">{{ 'profile.salesforce_contact_id'|trans }}: {{ salesforce_integration.salesforceContactId }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary" onclick="resyncSalesforce()">
+                                <i class="bi bi-arrow-repeat"></i> {{ 'profile.salesforce_resync'|trans }}
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="reconnectSalesforce()">
+                                <i class="bi bi-link"></i> {{ 'profile.salesforce_reconnect'|trans }}
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ 'profile.salesforce_connected_but_not_synced'|trans }}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ path('salesforce_sync') }}" class="btn btn-primary">
+                                <i class="bi bi-cloud-arrow-up"></i> {{ 'profile.salesforce_sync'|trans }}
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary" onclick="reconnectSalesforce()">
+                                <i class="bi bi-link"></i> {{ 'profile.salesforce_reconnect'|trans }}
+                            </button>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ 'profile.salesforce_not_connected'|trans }}
+                    </div>
+                    <a href="{{ path('salesforce_connect') }}" class="btn btn-primary">
+                        <i class="bi bi-cloud-arrow-up"></i> {{ 'profile.salesforce_connect'|trans }}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Мои инвентари -->
 <div class="row mb-5">
     <div class="col-12">
@@ -530,6 +589,68 @@ function deleteMultipleInventories(inventoryIds) {
         console.error('Error:', error);
         showNotification('{{ 'js.delete_error'|trans }}');
     });
+}
+
+// Функция для повторной синхронизации с Salesforce
+function resyncSalesforce() {
+    showConfirmationModal(
+        '{{ 'profile.salesforce_resync_confirm'|trans }}',
+        function(confirmed) {
+            if (confirmed) {
+                fetch('/profile/salesforce/resync', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || '{{ 'profile.salesforce_resync_success'|trans }}');
+                        // Перезагружаем страницу через 2 секунды
+                        setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                        showNotification(data.error || '{{ 'profile.salesforce_resync_error'|trans }}');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('{{ 'profile.salesforce_resync_error'|trans }}');
+                });
+            }
+        }
+    );
+}
+
+// Функция для повторного подключения к Salesforce
+function reconnectSalesforce() {
+    showConfirmationModal(
+        '{{ 'profile.salesforce_reconnect_confirm'|trans }}',
+        function(confirmed) {
+            if (confirmed) {
+                fetch('/profile/salesforce/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || '{{ 'profile.salesforce_reconnect_success'|trans }}');
+                        // Перенаправляем на страницу подключения через 1 секунду
+                        setTimeout(() => window.location.href = '{{ path('salesforce_connect') }}', 1000);
+                    } else {
+                        showNotification(data.error || '{{ 'profile.salesforce_reconnect_error'|trans }}');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('{{ 'profile.salesforce_reconnect_error'|trans }}');
+                });
+            }
+        }
+    );
 }
 
 // Инициализация при загрузке страницы

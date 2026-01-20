@@ -84,7 +84,6 @@ class UserBlockCheckListener
             'auth_resend_verification',
         ];
 
-        // API маршруты тоже могут быть публичными
         if (str_starts_with($route, 'api_')) {
             return false;
         }

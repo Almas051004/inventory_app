@@ -33,6 +33,16 @@ services:
             $facebookClientSecret: '%env(FACEBOOK_CLIENT_SECRET)%'
             $appUrl: '%env(APP_URL)%'
 
+    App\Service\Integration\Salesforce\SalesforceService:
+        arguments:
+            $enabled: '%salesforce.enabled%'
+            $clientId: '%salesforce.client_id%'
+            $clientSecret: '%salesforce.client_secret%'
+            $redirectUri: '%salesforce.redirect_uri%'
+            $authUrl: '%salesforce.auth_url%'
+            $tokenUrl: '%salesforce.token_url%'
+            $apiBaseUrl: '%salesforce.api_base_url%'
+
     App\Service\EmailService:
         arguments:
             $fromAddress: '%env(MAIL_FROM_ADDRESS)%'
@@ -55,6 +65,11 @@ services:
         arguments:
             $imgcdnApiKey: '%env(IMG_CDN_TOKEN)%'
             $imgcdnApiUrl: '%env(IMG_CDN_API)%'
+
+    # Cloud storage service (Dropbox)
+    App\Service\CloudStorageService:
+        arguments:
+            $dropboxAccessToken: '%env(DROPBOX_ACCESS_TOKEN)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

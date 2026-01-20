@@ -117,7 +117,6 @@ class InventoryController extends AbstractController
                     $inventory->setImageUrl($imageUrl);
                 } else {
                     // Если изображение не загрузилось (например, дубликат), просто не устанавливаем его
-                    // Это не критично для создания инвентаря
                     $this->addFlash('warning', $this->translator->trans('controller.create_inventory.image_upload_warning'));
                 }
             }
@@ -495,7 +494,6 @@ class InventoryController extends AbstractController
                     $inventory->setImageUrl($imageUrl);
                 } else {
                     // Если изображение не загрузилось (например, дубликат), просто не устанавливаем его
-                    // Это не критично для создания инвентаря
                     $this->addFlash('warning', $this->translator->trans('controller.create_inventory.image_upload_warning'));
                 }
             }

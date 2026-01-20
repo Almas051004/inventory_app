@@ -255,7 +255,16 @@
 
         <footer class="bg-body-tertiary text-center py-3 mt-5">
             <div class="container">
-                <p class="text-body-secondary mb-0">{{ 'footer.copyright'|trans({'%year%': 'now'|date('Y')}) }}</p>
+                <p class="text-body-secondary mb-0">
+                    {{ 'footer.copyright'|trans({'%year%': 'now'|date('Y')}) }}
+                    {% if app.user is defined and app.user %}
+                    <span class="ms-3">
+                        <a href="{{ path('support_create') }}" class="text-body-secondary text-decoration-none" title="{{ 'support.create_title'|trans }}">
+                            <i class="bi bi-question-circle"></i> {{ 'footer.help'|trans }}
+                        </a>
+                    </span>
+                    {% endif %}
+                </p>
             </div>
         </footer>
 
@@ -272,6 +281,25 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{{ 'modal.ok'|trans }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Универсальное модальное окно для подтверждений -->
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmationModalLabel">{{ 'modal.confirmation_title'|trans }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="confirmationModalBody">
+                        {{ 'modal.action_confirmation_message'|trans }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'modal.cancel'|trans }}</button>
+                        <button type="button" class="btn btn-danger" id="confirmationModalConfirm">{{ 'modal.action_confirmation_confirm'|trans }}</button>
                     </div>
                 </div>
             </div>
@@ -325,6 +353,49 @@
                     }
 
                     modalBody.innerHTML = message;
+                    modal.show();
+                };
+
+                // Функция для показа Bootstrap модального окна подтверждения
+                window.showConfirmationModal = function(message, callback) {
+                    const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                    const modalBody = document.getElementById('confirmationModalBody');
+                    const confirmBtn = document.getElementById('confirmationModalConfirm');
+
+                    // Устанавливаем сообщение
+                    modalBody.textContent = message;
+
+                    // Очищаем предыдущие обработчики
+                    const newConfirmBtn = confirmBtn.cloneNode(true);
+                    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                    // Добавляем новый обработчик
+                    newConfirmBtn.addEventListener('click', function() {
+                        modal.hide();
+                        if (callback) callback(true);
+                    });
+
+                    // Обработчик для кнопки отмены
+                    const cancelBtn = document.querySelector('#confirmationModal .btn-secondary');
+                    const cancelHandler = function() {
+                        modal.hide();
+                        if (callback) callback(false);
+                    };
+
+                    // Очищаем предыдущие обработчики отмены
+                    const newCancelBtn = cancelBtn.cloneNode(true);
+                    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                    newCancelBtn.addEventListener('click', cancelHandler);
+
+                    // Обработчик для закрытия по клику на фон или крестик
+                    const modalElement = document.getElementById('confirmationModal');
+                    const closeHandler = function() {
+                        if (callback) callback(false);
+                    };
+
+                    modalElement.addEventListener('hidden.bs.modal', closeHandler, { once: true });
+
+                    // Показываем модальное окно
                     modal.show();
                 };
             </script>

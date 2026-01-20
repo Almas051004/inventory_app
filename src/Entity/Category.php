@@ -64,7 +64,6 @@ class Category
     public function removeInventory(Inventory $inventory): static
     {
         if ($this->inventories->removeElement($inventory)) {
-            // set the owning side to null (unless already changed)
             if ($inventory->getCategory() === $this) {
                 $inventory->setCategory(null);
             }

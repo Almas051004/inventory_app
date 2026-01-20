@@ -1,0 +1,10 @@
+parameters:
+    salesforce.enabled: '%env(bool:SALESFORCE_ENABLED)%'
+    salesforce.client_id: '%env(string:SALESFORCE_CLIENT_ID)%'
+    salesforce.client_secret: '%env(string:SALESFORCE_CLIENT_SECRET)%'
+    salesforce.redirect_uri: '%env(string:SALESFORCE_REDIRECT_URI)%'
+    salesforce.auth_url: '%env(string:SALESFORCE_AUTH_URL)%'
+    salesforce.token_url: '%env(string:SALESFORCE_TOKEN_URL)%'
+    salesforce.api_base_url: '%env(string:SALESFORCE_API_BASE_URL)%'
+
+

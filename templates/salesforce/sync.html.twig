@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'salesforce.sync.title'|trans }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                    {{ 'salesforce.sync.title'|trans }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="salesforceSyncForm" method="post">
+                        <div class="mb-3">
+                            <label for="companyName" class="form-label">{{ 'salesforce.sync.company_name'|trans }}</label>
+                            <input type="text" class="form-control" id="companyName" name="company_name" required>
+                            <div class="form-text">{{ 'salesforce.sync.company_name_help'|trans }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">{{ 'salesforce.sync.phone'|trans }}</label>
+                            <input type="tel" class="form-control" id="phone" name="phone">
+                            <div class="form-text">{{ 'salesforce.sync.phone_help'|trans }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">{{ 'salesforce.sync.address'|trans }}</label>
+                            <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                            <div class="form-text">{{ 'salesforce.sync.address_help'|trans }}</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {{ 'salesforce.sync.info'|trans }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('app_profile') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> {{ 'common.back'|trans }}
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="syncBtn">
+                                <i class="bi bi-cloud-arrow-up"></i> {{ 'salesforce.sync.submit'|trans }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('salesforceSyncForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const syncBtn = document.getElementById('syncBtn');
+    const originalText = syncBtn.innerHTML;
+    syncBtn.disabled = true;
+    syncBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> {{ 'salesforce.sync.processing'|trans }}';
+
+    const formData = new FormData(this);
+
+    fetch('/auth/salesforce/sync', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || '{{ 'salesforce.sync.success'|trans }}');
+            setTimeout(() => window.location.href = '{{ path('app_profile') }}', 2000);
+        } else {
+            showNotification(data.error || '{{ 'salesforce.sync.error'|trans }}');
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('{{ 'salesforce.sync.error'|trans }}');
+        syncBtn.disabled = false;
+        syncBtn.innerHTML = originalText;
+    });
+});
+</script>
+{% endblock %}
+
+

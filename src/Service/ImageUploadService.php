@@ -73,10 +73,9 @@ class ImageUploadService
             if (!isset($data['status_code']) || $data['status_code'] !== 200) {
                 $error = isset($data['error']['message']) ? $data['error']['message'] : $this->translator->trans('image_upload.unknown_upload_error');
 
-                // Если это дубликат (code 101) - не считаем ошибкой
                 if (isset($data['error']['code']) && $data['error']['code'] === 101) {
                     error_log("Image duplicate detected: " . $error);
-                    return null; // Возвращаем null для дубликатов - пусть контроллер обработает
+                    return null;
                 }
 
                 throw new \Exception($error);
