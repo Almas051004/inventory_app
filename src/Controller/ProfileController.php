@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\InventoryRepository;
 use App\Repository\SalesforceIntegrationRepository;
 use App\Service\Integration\Salesforce\SalesforceService;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,8 @@ class ProfileController extends AbstractController
     public function __construct(
         private InventoryRepository $inventoryRepository,
         private SalesforceIntegrationRepository $salesforceIntegrationRepository,
-        private SalesforceService $salesforceService
+        private SalesforceService $salesforceService,
+        private TranslatorInterface $translator
     ) {
     }
 
@@ -58,7 +60,7 @@ class ProfileController extends AbstractController
             if (!$integration) {
                 return new JsonResponse([
                     'success' => false,
-                    'error' => 'Salesforce integration not found'
+                    'error' => $this->translator->trans('profile.salesforce_integration_not_found')
                 ], 404);
             }
 
@@ -101,13 +103,13 @@ class ProfileController extends AbstractController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Salesforce resync completed successfully'
+                'message' => $this->translator->trans('profile.salesforce_resync_success')
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => 'Failed to resync with Salesforce'
+                'error' => $this->translator->trans('profile.salesforce_resync_error')
             ], 500);
         }
     }
@@ -128,13 +130,13 @@ class ProfileController extends AbstractController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Salesforce integration disconnected'
+                'message' => $this->translator->trans('profile.salesforce_integration_disconnected')
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => 'Failed to disconnect Salesforce integration'
+                'error' => $this->translator->trans('profile.salesforce_integration_disconnect_error')
             ], 500);
         }
     }

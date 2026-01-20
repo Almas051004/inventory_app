@@ -356,6 +356,9 @@ profile.no_accessible_inventories_description: "Другие пользоват�
 
 # Salesforce integration
 profile.salesforce_integration: "Интеграция с Salesforce"
+profile.salesforce_integration_not_found: "Salesforce интеграция не найдена. Пожалуйста, подключитесь сначала."
+profile.salesforce_integration_disconnected: "Salesforce интеграция отключена"
+profile.salesforce_integration_disconnect_error: "Не удалось отключить интеграцию с Salesforce"
 profile.salesforce_connect: "Подключиться к Salesforce"
 profile.salesforce_connected: "Salesforce подключен"
 profile.salesforce_not_connected: "Salesforce не подключен"
