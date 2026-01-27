@@ -70,6 +70,16 @@ services:
     App\Service\CloudStorageService:
         arguments:
             $dropboxAccessToken: '%env(DROPBOX_ACCESS_TOKEN)%'
+            $dropboxRefreshToken: '%env(DROPBOX_REFRESH_TOKEN)%'
+            $dropboxAppKey: '%env(DROPBOX_APP_KEY)%'
+            $dropboxAppSecret: '%env(DROPBOX_APP_SECRET)%'
+
+    # Dropbox OAuth2 Controller
+    App\Controller\DropboxAuthController:
+        arguments:
+            $dropboxAppKey: '%env(DROPBOX_APP_KEY)%'
+            $dropboxAppSecret: '%env(DROPBOX_APP_SECRET)%'
+            $appUrl: '%env(APP_URL)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'dropbox.status.title'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title mb-0">
+                        <i class="fab fa-dropbox me-2"></i>
+                        {{ 'dropbox.status.title'|trans }}
+                    </h1>
+                </div>
+                <div class="card-body">
+                    {% if is_configured %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {{ 'dropbox.status.configured'|trans }}
+                        </div>
+
+                        {% if account_info %}
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>{{ 'dropbox.status.account_info'|trans }}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-3">{{ 'dropbox.status.account_id'|trans }}</dt>
+                                        <dd class="col-sm-9">{{ account_info.account_id ?? 'N/A' }}</dd>
+
+                                        <dt class="col-sm-3">{{ 'dropbox.status.name'|trans }}</dt>
+                                        <dd class="col-sm-9">
+                                            {{ account_info.name.display_name ?? account_info.name.familiar_name ?? 'N/A' }}
+                                        </dd>
+
+                                        <dt class="col-sm-3">{{ 'dropbox.status.email'|trans }}</dt>
+                                        <dd class="col-sm-9">{{ account_info.email ?? 'N/A' }}</dd>
+
+                                        <dt class="col-sm-3">{{ 'dropbox.status.type'|trans }}</dt>
+                                        <dd class="col-sm-9">
+                                            {% if account_info.account_type %}
+                                                {{ account_info.account_type['.tag'] ?? 'N/A' }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{ 'dropbox.status.not_configured'|trans }}
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="{{ path('auth_dropbox') }}" class="btn btn-primary btn-lg">
+                                <i class="fab fa-dropbox me-2"></i>
+                                {{ 'dropbox.status.setup_now'|trans }}
+                            </a>
+                        </div>
+
+                        <div class="mt-4">
+                            <h5>{{ 'dropbox.status.manual_setup_title'|trans }}</h5>
+                            <p>{{ 'dropbox.status.manual_setup_description'|trans }}</p>
+                            <ul>
+                                <li>{{ 'dropbox.status.manual_step1'|trans }}</li>
+                                <li>{{ 'dropbox.status.manual_step2'|trans }}</li>
+                                <li>{{ 'dropbox.status.manual_step3'|trans }}</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-4 text-center">
+                        <a href="{{ path('app_home') }}" class="btn btn-secondary">
+                            <i class="fas fa-home me-2"></i>{{ 'dropbox.status.back_to_home'|trans }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

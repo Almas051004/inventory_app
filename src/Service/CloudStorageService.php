@@ -16,9 +16,20 @@ class CloudStorageService
     public function __construct(
         private TranslatorInterface $translator,
         private string $dropboxAccessToken,
+        private ?string $dropboxRefreshToken,
+        private string $dropboxAppKey,
+        private string $dropboxAppSecret,
         private LoggerInterface $logger
     ) {
-        if (!empty($this->dropboxAccessToken)) {
+        if (!empty($this->dropboxAccessToken) && !empty($this->dropboxAppKey) && !empty($this->dropboxAppSecret)) {
+            $tokenProvider = new DropboxRefreshableTokenProvider(
+                $this->dropboxAccessToken,
+                $this->dropboxRefreshToken,
+                $this->dropboxAppKey,
+                $this->dropboxAppSecret
+            );
+            $this->dropboxClient = new Client($tokenProvider);
+        } elseif (!empty($this->dropboxAccessToken)) {
             $this->dropboxClient = new Client($this->dropboxAccessToken);
         }
     }

@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'dropbox.setup.title'|trans }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title mb-0">
+                        <i class="fab fa-dropbox me-2"></i>
+                        {{ 'dropbox.setup.title'|trans }}
+                    </h1>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h5>{{ 'dropbox.setup.success_title'|trans }}</h5>
+                        <p>{{ 'dropbox.setup.success_message'|trans }}</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h5>{{ 'dropbox.setup.next_steps'|trans }}</h5>
+                        <p>{{ 'dropbox.setup.instructions'|trans }}</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <strong>{{ 'dropbox.setup.access_token'|trans }}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <code class="text-break">{{ access_token }}</code>
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="copyToClipboard('{{ access_token }}')">
+                                        <i class="fas fa-copy"></i> {{ 'dropbox.setup.copy'|trans }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if refresh_token %}
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <strong>{{ 'dropbox.setup.refresh_token'|trans }}</strong>
+                                </div>
+                                <div class="card-body">
+                                    <code class="text-break">{{ refresh_token }}</code>
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="copyToClipboard('{{ refresh_token }}')">
+                                        <i class="fas fa-copy"></i> {{ 'dropbox.setup.copy'|trans }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if expires_in %}
+                    <div class="alert alert-warning mt-3">
+                        <strong>{{ 'dropbox.setup.expires_in'|trans }}</strong>
+                        {{ expires_in }} {{ 'dropbox.setup.seconds'|trans }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <h5>{{ 'dropbox.setup.manual_setup'|trans }}</h5>
+                        <ol>
+                            <li>{{ 'dropbox.setup.step1'|trans }}</li>
+                            <li>{{ 'dropbox.setup.step2'|trans }}</li>
+                            <li>{{ 'dropbox.setup.step3'|trans }}</li>
+                        </ol>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <pre><code>DROPBOX_ACCESS_TOKEN="{{ access_token }}"
+{% if refresh_token %}DROPBOX_REFRESH_TOKEN="{{ refresh_token }}"
+{% endif %}DROPBOX_APP_KEY="your_app_key"
+DROPBOX_APP_SECRET="your_app_secret"</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <a href="{{ path('app_home') }}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>{{ 'dropbox.setup.back_to_home'|trans }}
+                        </a>
+                        <a href="{{ path('dropbox_status') }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-info-circle me-2"></i>{{ 'dropbox.setup.check_status'|trans }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // You could show a toast notification here
+        console.log('Token copied to clipboard');
+    });
+}
+</script>
+{% endblock %}
+
